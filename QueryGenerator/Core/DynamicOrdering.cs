@@ -1,0 +1,17 @@
+﻿using System.Linq.Expressions;
+
+namespace QueryGenerator.Core;
+
+internal struct DynamicOrdering
+{
+    public Expression Selector { get; }
+    public bool Ascending { get; }
+    public string MethodName { get; }
+
+    public DynamicOrdering(Expression selector, bool ascending, string methodName)
+    {
+        Selector = selector;
+        Ascending = ascending;
+        MethodName = methodName;
+    }
+}
