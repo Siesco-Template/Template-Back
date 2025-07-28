@@ -2,7 +2,6 @@
 using Permission.Api.Consumers;
 using Permission.Api.Services;
 using SharedLibrary.HelperServices;
-using SharedLibrary.Requests;
 
 namespace Permission.Api
 {

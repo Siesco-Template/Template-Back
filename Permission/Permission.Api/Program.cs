@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using ConfigComponent.Services;
+using Microsoft.AspNetCore.Diagnostics;
 using MongoDB.Driver;
 using Permission.Api;
 using Permission.Api.DAL;
-using Permission.Api.Dtos;
 using SharedLibrary;
 using SharedLibrary.Exceptions.Common;
 using SharedLibrary.ServiceRegistration;
+using SharedLibrary.Settings;
 
 internal class Program
 {
@@ -21,7 +22,8 @@ internal class Program
         builder.Services.AddSwagger();
 
         builder.Services.AddPermissionServices();
-        builder.Services.Configure<MongoDbSettings>(configuration.GetSection("MongoDB"));
+
+        //builder.Services.Configure<MongoDbSettings>(configuration.GetSection("MongoDB"));
 
         builder.Services.AddHttpClient();
 

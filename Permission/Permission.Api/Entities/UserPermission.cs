@@ -26,6 +26,6 @@ namespace Permission.Api.Entities
         public string PageKey { get; set; }
 
         [BsonElement("actionKeys")]
-        public List<string> ActionKeys { get; set; } = new(); 
+        public List<string> ActionKeys { get; set; } = new();
     }
 }

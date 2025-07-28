@@ -1,6 +1,7 @@
-﻿using ConfigComponent.Settings;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
+using SharedLibrary.HelperServices;
+using SharedLibrary.Settings;
 
 namespace ConfigComponent.Services
 {

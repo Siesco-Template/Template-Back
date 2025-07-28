@@ -2,10 +2,12 @@ using Auth.Business.Dtos;
 using Auth.Business.Helpers;
 using Auth.Business.Models;
 using Auth.DAL.Contexts;
+using ConfigComponent.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SharedLibrary;
 using SharedLibrary.ServiceRegistration;
+using System.Text.Json.Serialization;
 
 namespace Auth.API
 {
@@ -17,7 +19,12 @@ namespace Auth.API
 
             var configuration = builder.Configuration;
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddNewtonsoftJson().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
+            builder.RegisterConfigComponent("MongoDb");
 
             builder.Services.AddDbContext<AuthDbContext>(opt =>
             {
