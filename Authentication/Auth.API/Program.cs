@@ -57,14 +57,14 @@ namespace Auth.API
             builder.Services.AddAuthorization();
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI(x =>
                 {
                     x.ConfigObject.AdditionalItems.Add("persistAuthorization", "true");
                 });
-            }
+            //}
 
             app.UseCustomExceptionHandler();
             app.UseAuthentication();

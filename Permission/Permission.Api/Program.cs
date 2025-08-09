@@ -61,14 +61,14 @@ internal class Program
         builder.Services.AddSharedServices(configuration);
         var app = builder.Build();
 
-        if (app.Environment.IsDevelopment())
-        {
+        //if (app.Environment.IsDevelopment())
+        //{
             app.UseSwagger();
             app.UseSwaggerUI(x =>
             {
                 x.ConfigObject.AdditionalItems.Add("persistAuthorization", "true");
             });
-        }
+        //}
 
         app.UseHttpsRedirection();
 
