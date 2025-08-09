@@ -16,7 +16,7 @@ services:
     container_name: template-auth-service
     build:
       context: .
-      dockerfile: src/Authentication/Auth.API/Dockerfile
+      dockerfile: Authentication/Auth.API/Dockerfile
     ports:
       - "5032:8080"
     networks:
@@ -25,7 +25,7 @@ services:
     container_name: template-permission-service
     build:
       context: .
-      dockerfile: src/Permission.Api/Dockerfile
+      dockerfile: Permission.Api/Dockerfile
     ports:
       - "5033:8080"
     networks:

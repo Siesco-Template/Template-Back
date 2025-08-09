@@ -4,7 +4,7 @@ EXPOSE 5032
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY . .
-WORKDIR "src/Authentication/Auth.API"
+WORKDIR "Authentication/Auth.API"
 RUN dotnet restore "Auth.API.csproj"
 RUN dotnet build "Auth.API.csproj" -c Release -o /app/build
 FROM build AS publish
