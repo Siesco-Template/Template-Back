@@ -5,7 +5,7 @@ EXPOSE 5031
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY . .
-WORKDIR "/src/Gateway/Template.Gateway"
+WORKDIR "/Gateway/Template.Gateway"
 RUN dotnet restore "Template.Gateway.csproj"
 RUN dotnet build "Template.Gateway.csproj" -c Release -o /app/build
 
