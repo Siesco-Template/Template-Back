@@ -1,16 +1,15 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 5031
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY . .
-WORKDIR "/Gateway/Template.Gateway"
-RUN dotnet restore "Template.Gateway.csproj"
-RUN dotnet build "Template.Gateway.csproj" -c Release -o /app/build
+RUN dotnet restore "Gateway/Template.Gateway/Template.Gateway.csproj"
+RUN dotnet build "Gateway/Template.Gateway/Template.Gateway.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Template.Gateway.csproj" -c Release -o /app/publish
+RUN dotnet publish "Gateway/Template.Gateway/Template.Gateway.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
