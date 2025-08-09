@@ -5,7 +5,7 @@ EXPOSE 5033
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY . .
-RUN dotnet restore "Permission/Permission.Api.csproj"
+RUN dotnet restore "Permission/Permission.Api/Permission.Api.csproj"
 RUN dotnet build "Permission/Permission.Api/Permission.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
