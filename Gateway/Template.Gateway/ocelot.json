@@ -1,0 +1,79 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/hubs/export",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5002
+        }
+      ],
+      "UpstreamPathTemplate": "/afmis/hubs/export",
+      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "afmis-auth-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/{everything}",
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "afmis-main-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/afmis/{everything}",
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "afmis-permission-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/permission/{everything}",
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+    },
+    //{
+    //  "DownstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
+    //  "DownstreamScheme": "http",
+    //  "DownstreamHostAndPorts": [
+    //    {
+    //      "Host": "afmis-auth-service",
+    //      "Port": 8080
+    //    }
+    //  ],
+    //  "UpstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
+    //  "UpstreamHttpMethod": [ "GET" ]
+    //},
+    {
+      "DownstreamPathTemplate": "/exports/{fileName}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "afmis-main-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/exports/{fileName}",
+      "UpstreamHttpMethod": [ "GET" ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://afmis-gateway:8080"
+  }
+}
