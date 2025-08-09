@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  gateway:
+    container_name: template-gateway
+    build:
+      context: .
+      dockerfile: Gateway/Template.Gateway/Dockerfile
+    ports:
+      - "5031:8080"
+    depends_on:
+      - auth
+      - permission
+    networks:
+      - public-network
+  auth:
+    container_name: template-auth-service
+    build:
+      context: .
+      dockerfile: src/Authentication/Auth.API/Dockerfile
+    ports:
+      - "5032:8080"
+    networks:
+      - public-network      
+  permission:
+    container_name: template-permission-service
+    build:
+      context: .
+      dockerfile: src/Permission.Api/Dockerfile
+    ports:
+      - "5033:8080"
+    networks:
+      - public-network
+networks:
+  public-network:
+    external: true
