@@ -25,7 +25,7 @@ services:
     container_name: template-permission-service
     build:
       context: .
-      dockerfile: Permission.Api/Dockerfile
+      dockerfile: Permission/Permission.Api/Dockerfile
     ports:
       - "5033:8080"
     networks:
