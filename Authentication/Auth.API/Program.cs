@@ -79,8 +79,9 @@ namespace Auth.API
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseHttpsRedirection();
-            app.MapControllers();
+            app.UseRouting();
             app.UseCors("AllowSpecificOrigin");
+            app.MapControllers();
 
             app.Run();
         }
