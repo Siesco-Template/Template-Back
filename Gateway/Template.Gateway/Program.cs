@@ -1,21 +1,38 @@
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
 
 namespace Template.Gateway
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            var environment = builder.Environment.EnvironmentName;
+            builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
+                                  .AddJsonFile($"ocelot.{environment}.json", optional: true, reloadOnChange: true);
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
             builder.Services.AddOpenApi();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .SetIsOriginAllowed(_ => true)
+                        .AllowCredentials();
+                });
+            });
+
+            builder.Services.AddOcelot();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
@@ -23,10 +40,14 @@ namespace Template.Gateway
 
             app.UseHttpsRedirection();
 
+            app.UseCors("AllowAll");
+
             app.UseAuthorization();
 
 
             app.MapControllers();
+
+            await app.UseOcelot();
 
             app.Run();
         }

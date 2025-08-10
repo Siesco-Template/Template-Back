@@ -52,6 +52,15 @@ namespace Auth.API
 #endif
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder =>
+                    {
+                        builder.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
+                    });
+            });
+
             builder.Services.AddAuth(configuration["Jwt:Issuer"]!, configuration["Jwt:Audience"]!, configuration["Jwt:SigningKey"]!);
 
             builder.Services.AddAuthorization();
@@ -71,6 +80,7 @@ namespace Auth.API
             app.UseAuthorization();
             app.UseHttpsRedirection();
             app.MapControllers();
+            app.UseCors("AllowSpecificOrigin");
 
             app.Run();
         }
