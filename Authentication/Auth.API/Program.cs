@@ -49,6 +49,7 @@ namespace Auth.API
             builder.Services.AddScoped<DbContext, AuthDbContext>();
             builder.Services.AddScoped<EntitySetProvider>();
             builder.Services.AddScoped<ReportService>();
+            builder.Services.AddScoped<ConfigService>();
             builder.Services.AddScoped<FilterService>();
             builder.Services.AddScoped<CurrentUser>();
             builder.Services.AddScoped<GetQueryHelper>();
