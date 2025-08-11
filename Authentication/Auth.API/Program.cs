@@ -5,7 +5,6 @@ using Auth.Business.Services;
 using Auth.Core.Dtos.FolderFiles;
 using Auth.DAL.Contexts;
 using ConfigComponent.Services;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FilterComponent.Services;
 using FilterComponent.Utilities;
 using FluentValidation;
@@ -79,7 +78,7 @@ namespace Auth.API
             });
             builder.Services.AddHostedService<ExportWorkerService>();
 
-            //builder.Services.AddSwagger();
+            builder.Services.AddSwagger();
 
             builder.Services.AddSwaggerGen(c =>
             {
