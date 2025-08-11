@@ -7,6 +7,7 @@ using Auth.DAL.Contexts;
 using ConfigComponent.Services;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FilterComponent.Services;
+using FilterComponent.Utilities;
 using FluentValidation;
 using Folder.Abstractions;
 using Folder.Roots;
@@ -87,7 +88,10 @@ namespace Auth.API
                 c.CustomSchemaIds(t => t.FullName!.Replace("+", "."));
             });
 
-            //builder.Services.AddSingleton<IFolderMongoContext, FolderMongoContext>();
+            builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection("FolderDb"));
+
+            builder.Services.AddSingleton<IFolderMongoContext, FolderMongoContext>();
 
             // user modeli folder strukturuna uygunlasdirmaq
             builder.Services.AddScoped<IFolderService<UserFile>>(sp =>
