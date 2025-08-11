@@ -1,0 +1,23 @@
+name: Deploy to Server
+on:
+  push:
+    branches:
+      - deploy
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+    - name: Deploy to Server
+      run: |
+        ssh -o StrictHostKeyChecking=no root@65.108.38.170 << 'EOF'
+          cd /home/projects/Template/Template-Back && \
+          git pull origin deploy && \
+          docker-compose down && \
+          docker-compose up --build -d
+        EOF
