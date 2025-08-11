@@ -86,23 +86,21 @@ namespace Auth.API
             builder.Services.AddAuthorization();
             var app = builder.Build();
 
-            //if (app.Environment.IsDevelopment())
-            //{
-                app.UseSwagger();
-                app.UseSwaggerUI(x =>
-                {
-                    x.ConfigObject.AdditionalItems.Add("persistAuthorization", "true");
-                });
-            //}
-
             app.UseCustomExceptionHandler();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(x => x.ConfigObject.AdditionalItems.Add("persistAuthorization", "true"));
+
+            app.UseHttpsRedirection();
+
+            app.UseRouting();
+
+            app.UseCors("AllowSpecificOrigin");
+
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseHttpsRedirection();
-            app.UseRouting();
-            app.UseCors("AllowSpecificOrigin");
-            app.MapControllers();
 
+            app.MapControllers();
             app.Run();
         }
     }
