@@ -7,9 +7,9 @@ namespace Auth.Business.Services
 {
     public class UserService(AuthDbContext _context) : IUserService
     {
-        public async Task<List<Auth.Business.Dtos.UserDtos.UserListDto>> GetAllAsync()
+        public async Task<List<UserListDto>> GetAllAsync()
         {
-            return await _context.Users.Select(u => new Auth.Business.Dtos.UserDtos.UserListDto
+            return await _context.Users.Select(u => new UserListDto
             {
                 Id = u.Id,
                 Email = u.Email,
@@ -31,7 +31,7 @@ namespace Auth.Business.Services
                 }).FirstOrDefaultAsync();
         }
 
-        public async Task CreateAsync(Auth.Business.Dtos.UserDtos.CreateUserDto dto)
+        public async Task CreateAsync(CreateUserDto dto)
         {
             var user = new User
             {
@@ -44,7 +44,7 @@ namespace Auth.Business.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Auth.Business.Dtos.UserDtos.UpdateUserDto dto)
+        public async Task UpdateAsync(UpdateUserDto dto)
         {
             var user = await _context.Users.FindAsync(dto.Id);
 
@@ -67,10 +67,10 @@ namespace Auth.Business.Services
 
     public interface IUserService
     {
-        Task<List<Auth.Business.Dtos.UserDtos.UserListDto>> GetAllAsync();
+        Task<List<UserListDto>> GetAllAsync();
         Task<GetUserByIdDto?> GetByIdAsync(Guid id);
-        Task CreateAsync(Auth.Business.Dtos.UserDtos.CreateUserDto dto);
-        Task UpdateAsync(Auth.Business.Dtos.UserDtos.UpdateUserDto dto);
+        Task CreateAsync(CreateUserDto dto);
+        Task UpdateAsync(UpdateUserDto dto);
         Task DeleteAsync(Guid id);
     }
 }

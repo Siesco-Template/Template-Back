@@ -78,12 +78,13 @@ namespace Auth.API
             });
             builder.Services.AddHostedService<ExportWorkerService>();
 
-            builder.Services.AddSwagger();
+            //builder.Services.AddSwagger();
 
             builder.Services.AddSwaggerGen(c =>
             {
                 var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+                c.CustomSchemaIds(t => t.FullName!.Replace("+", "."));
             });
 
             //builder.Services.AddSingleton<IFolderMongoContext, FolderMongoContext>();
