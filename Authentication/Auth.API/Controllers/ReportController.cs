@@ -1,0 +1,27 @@
+﻿using Auth.Business.Dtos.ReportDtos;
+using Auth.Business.Services;
+using Microsoft.AspNetCore.Mvc;
+using SharedLibrary.Attributes;
+using SharedLibrary.StaticDatas;
+using TableComponent.Entities;
+using TableComponent.Extensions;
+
+namespace Auth.API.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ReportController(ReportService _reportService, GetQueryHelper _getQueryHelper) : ControllerBase
+    {
+        [Permission(PageKeys.Report, ActionKeys.GetById)]
+        [HttpGet("[action]")]
+        public async Task<ReportDto> GetReportById(Guid reportId) => await _reportService.GetReportByIdAsync(reportId);
+
+        //[Permission(PageKeys.Report, ActionKeys.GetById)]
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetAllReports([FromQuery] TableQueryRequest tableRequest)
+        {
+            var result = await _getQueryHelper.GetQuery(tableRequest);
+            return Ok(result);
+        }
+    }
+}
