@@ -1,0 +1,111 @@
+{
+  "Report": [
+    {
+      "Field": "Number",
+      "IsRequired": true,
+      "DataType": "String"
+    },
+    {
+      "Field": "CompileDate",
+      "IsRequired": true,
+      "DataType": "Date"
+    },
+    {
+      "Field": "StartDate",
+      "IsRequired": true,
+      "DataType": "Date"
+    },
+    {
+      "Field": "EndDate",
+      "IsRequired": true,
+      "DataType": "Date"
+    },
+    {
+      "Field": "Term",
+      "IsRequired": true,
+      "DataType": "Int"
+    },
+    {
+      "Field": "ClassificationCode1",
+      "IsRequired": false,
+      "DataType": "String"
+    },
+    {
+      "Field": "ClassificationCode2",
+      "IsRequired": false,
+      "DataType": "String"
+    },
+    {
+      "Field": "FuntionalClassificationCode",
+      "IsRequired": false,
+      "DataType": "String"
+    },
+    {
+      "Field": "ReportStatus",
+      "IsRequired": true,
+      "DataType": "Int"
+    },
+    {
+      "Field": "OrganizationId",
+      "IsRequired": true,
+      "DataType": "String",
+      "ForeignTable": "Organization",
+      "ForeignColumn": "Id"
+    }
+  ],
+  "Detail": [
+    {
+      "Field": "Title",
+      "IsRequired": true,
+      "DataType": "String"
+    },
+    {
+      "Field": "Code",
+      "IsRequired": true,
+      "DataType": "Int"
+    },
+    {
+      "Field": "ParentDetailId",
+      "IsRequired": false,
+      "DataType": "String",
+      "ForeignTable": "Detail",
+      "ForeignColumn": "Id"
+    }
+  ],
+  "ReportDetail": [
+    {
+      "Field": "DetailId",
+      "IsRequired": true,
+      "DataType": "String",
+      "ForeignTable": "Detail",
+      "ForeignColumn": "Id"
+    },
+    {
+      "Field": "ReportId",
+      "IsRequired": true,
+      "DataType": "String",
+      "ForeignTable": "Report",
+      "ForeignColumn": "Id"
+    },
+    {
+      "Field": "EstimateAmount",
+      "IsRequired": true,
+      "DataType": "Decimal"
+    },
+    {
+      "Field": "FinancingAmount",
+      "IsRequired": true,
+      "DataType": "Decimal"
+    },
+    {
+      "Field": "CheckoutAmount",
+      "IsRequired": true,
+      "DataType": "Decimal"
+    },
+    {
+      "Field": "ActualAmount",
+      "IsRequired": true,
+      "DataType": "Decimal"
+    }
+  ]
+}

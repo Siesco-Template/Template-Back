@@ -7,6 +7,8 @@ using ConfigComponent.Services;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FilterComponent.Services;
 using FluentValidation;
+using ImportExportComponent.BackgroundServices;
+using ImportExportComponent.Dtos;
 using ImportExportComponent.HelperServices;
 using ImportExportComponent.Services;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,8 @@ using SharedLibrary;
 using SharedLibrary.HelperServices;
 using SharedLibrary.ServiceRegistration;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
+using TableComponent.Entities;
 using TableComponent.Extensions;
 
 namespace Auth.API
@@ -58,6 +62,12 @@ namespace Auth.API
             builder.Services.AddScoped<ExportQueryHelper>();
             builder.Services.AddScoped<ExportService>();
             builder.Services.AddScoped<ImportService>();
+
+            builder.Services.AddSingleton(provider =>
+            {
+                return Channel.CreateUnbounded<(List<ExportColumnDto>, TableQueryRequest, string)>();
+            });
+            builder.Services.AddHostedService<ExportWorkerService>();
 
             builder.Services.AddSwagger();
 
