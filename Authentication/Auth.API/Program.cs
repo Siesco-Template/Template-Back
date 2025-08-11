@@ -1,20 +1,29 @@
-using Auth.Business.Dtos;
+﻿using Auth.Business.Dtos;
 using Auth.Business.Helpers;
 using Auth.Business.Models;
 using Auth.Business.Services;
+using Auth.Core.Dtos.FolderFiles;
 using Auth.DAL.Contexts;
 using ConfigComponent.Services;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FilterComponent.Services;
 using FluentValidation;
+using Folder.Abstractions;
+using Folder.Roots;
+using Folder.Services.FolderFileServices;
+using Folder.Services.FolderServices;
 using ImportExportComponent.BackgroundServices;
 using ImportExportComponent.Dtos;
 using ImportExportComponent.HelperServices;
 using ImportExportComponent.Services;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using SharedLibrary;
 using SharedLibrary.HelperServices;
 using SharedLibrary.ServiceRegistration;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using TableComponent.Entities;
@@ -70,6 +79,34 @@ namespace Auth.API
             builder.Services.AddHostedService<ExportWorkerService>();
 
             builder.Services.AddSwagger();
+
+            builder.Services.AddSwaggerGen(c =>
+            {
+                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+            });
+
+            //builder.Services.AddSingleton<IFolderMongoContext, FolderMongoContext>();
+
+            // user modeli folder strukturuna uygunlasdirmaq
+            builder.Services.AddScoped<IFolderService<UserFile>>(sp =>
+                new FolderService<UserFile>(sp.GetRequiredService<IFolderMongoContext>(), RootFolders.Users));
+
+
+            builder.Services.AddScoped<IFolderFileService<UserFile>>(sp =>
+            {
+                var context = sp.GetRequiredService<IFolderMongoContext>();
+                var folderService = sp.GetRequiredService<IFolderService<UserFile>>();
+                return new FolderFileService<UserFile>(context, folderService, RootFolders.Users);
+            });
+
+            // Bu s?tir Guid problemi üçün laz?md?r
+            BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+
+            // ---------------- Folder inteqrasiya ----------------end
+
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IUserFileService, UserFileService>();
 
             builder.Services.AddSharedServices(configuration);
 

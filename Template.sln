@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gateway", "Gateway", "{099A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template.Gateway", "Gateway\Template.Gateway\Template.Gateway.csproj", "{3D7327A7-7A3D-467B-9FB0-A6C7DB0965C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Folder", "Folder\Folder.csproj", "{76FD0F64-B132-4719-B837-872B154630E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{3D7327A7-7A3D-467B-9FB0-A6C7DB0965C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D7327A7-7A3D-467B-9FB0-A6C7DB0965C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D7327A7-7A3D-467B-9FB0-A6C7DB0965C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76FD0F64-B132-4719-B837-872B154630E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76FD0F64-B132-4719-B837-872B154630E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76FD0F64-B132-4719-B837-872B154630E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76FD0F64-B132-4719-B837-872B154630E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

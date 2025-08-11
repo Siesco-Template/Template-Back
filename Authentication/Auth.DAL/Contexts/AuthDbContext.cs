@@ -15,6 +15,9 @@ namespace Auth.DAL.Contexts
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<ReportDetail> ReportDetails { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Sale> Sales { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
