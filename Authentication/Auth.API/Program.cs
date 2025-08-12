@@ -119,7 +119,7 @@ namespace Auth.API
 #if DEBUG
                 BaseUrl = "http://localhost:5003/api"
 #else
-            BaseUrl = ""
+            BaseUrl = "https://template-gateway-api.microsol.az/permission/"
 #endif
             });
 
