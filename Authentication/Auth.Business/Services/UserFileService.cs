@@ -85,6 +85,7 @@ namespace Auth.Business.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber ?? "unknown",
                 IsActive = true,
                 CreateDate = DateTime.UtcNow,
             };
