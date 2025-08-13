@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 using SharedLibrary.HelperServices;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace ConfigComponent.Services
 {
@@ -78,9 +79,30 @@ namespace ConfigComponent.Services
         public async Task DeleteUserTableConfigAsync(string tableKey)
         {
             var filter = Builders<BsonDocument>.Filter.Eq("userId", _userId);
-            var update = Builders<BsonDocument>.Update.Unset($"tables.{tableKey}");
+            var regex = $"^tables\\.{Regex.Escape(tableKey)}\\.";
 
-            await _configsCollection.UpdateOneAsync(filter, update);
+            var setStage = new BsonDocument("$set",
+                new BsonDocument("overrides",
+                     new BsonDocument("$arrayToObject",
+                         new BsonDocument("$filter", new BsonDocument
+                         {
+                             { "input", new BsonDocument("$objectToArray", "$overrides") },
+                             { "as", "kv" },
+                             { "cond", new BsonDocument("$not",
+                                 new BsonDocument("$regexMatch", new BsonDocument
+                                 {
+                                     { "input", "$$kv.k" },
+                                     { "regex", regex }
+                                 })
+                             )}
+                         })
+                     )
+                )
+            );
+
+            var pipeline = PipelineDefinition<BsonDocument, BsonDocument>.Create([setStage]);
+
+            await _configsCollection.UpdateOneAsync(filter, pipeline);
         }
 
         private void ApplyColumnOrdering(JObject? table)
