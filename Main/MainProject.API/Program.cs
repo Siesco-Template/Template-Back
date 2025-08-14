@@ -1,6 +1,5 @@
 ﻿using ConfigComponent.Services;
 using FilterComponent.Services;
-using SharedLibrary.HelperServices;
 using Folder.Abstractions;
 using Folder.Roots;
 using Folder.Services.FolderFileServices;
@@ -15,6 +14,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using SharedLibrary;
+using SharedLibrary.HelperServices;
 using SharedLibrary.ServiceRegistration;
 using SharedLibrary.Settings;
 using System.Reflection;
@@ -101,7 +101,7 @@ namespace MainProject.API
 #if DEBUG
                 BaseUrl = "http://localhost:5003/api"
 #else
-                        BaseUrl = "https://afmis-api.siesco.studio/permission"
+                BaseUrl = "https://template-api.microsol.az/permission"
 #endif
             });
 
