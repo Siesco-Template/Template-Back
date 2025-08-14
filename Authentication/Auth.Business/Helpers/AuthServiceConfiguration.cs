@@ -3,7 +3,9 @@ using Auth.Business.Helpers.HelperServices.Email;
 using Auth.Business.Helpers.HelperServices.Token;
 using Auth.Business.Services;
 using Auth.Business.Utilies.Templates;
+using Auth.DAL.Contexts;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TableComponent.Extensions;
 
@@ -22,6 +24,9 @@ namespace Auth.Business.Helpers
             services.AddScoped<EmailService>();
             services.AddScoped<CurrentUser>();
             services.AddScoped<AuthService>();
+            services.AddScoped<GetQueryHelper>();
+            services.AddScoped<DbContext, AuthDbContext>();
+            services.AddScoped<EntitySetProvider>();
             services.AddScoped<GetQueryHelper>();
         }
 

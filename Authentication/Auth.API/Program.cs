@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using SharedLibrary;
 using SharedLibrary.HelperServices;
 using SharedLibrary.ServiceRegistration;
+using FilterComponent.Services;
 
 namespace Auth.API
 {
@@ -34,7 +35,7 @@ namespace Auth.API
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
 
             builder.Services.AddScoped<CurrentUser>();
-
+            builder.RegisterFilterComponent("MongoDb");
             builder.Services.AddSwagger();
 
             builder.Services.AddSharedServices(configuration);
