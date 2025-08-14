@@ -34,8 +34,8 @@ namespace Auth.API
 
             builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
 
-            builder.Services.AddScoped<CurrentUser>();
             builder.RegisterFilterComponent("MongoDb");
+            builder.Services.AddScoped<CurrentUser>();
             builder.Services.AddSwagger();
 
             builder.Services.AddSharedServices(configuration);

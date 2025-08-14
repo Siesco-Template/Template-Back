@@ -12,7 +12,6 @@ namespace FilterComponent.Services
     public class FilterService
     {
         private readonly IMongoCollection<Filter> _filtersCollection;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly CurrentUser _currentUser;
         public FilterService(MongoDbService _mongoDbService, CurrentUser currentUser)
         {

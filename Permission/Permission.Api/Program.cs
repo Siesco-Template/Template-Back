@@ -36,7 +36,7 @@ internal class Program
 #endif
         });
 
-        var mongoDbSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDbSettings>();
+        var mongoDbSettings = builder.Configuration.GetSection("MongoDb").Get<MongoDbSettings>();
         builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoDbSettings.ConnectionString));
         builder.Services.AddSingleton(serviceProvider =>
         {

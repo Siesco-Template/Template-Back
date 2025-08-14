@@ -1,7 +1,7 @@
-﻿using FilterComponent.Utilities;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using SharedLibrary.HelperServices;
+using SharedLibrary.Settings;
 
 namespace FilterComponent.Services
 {

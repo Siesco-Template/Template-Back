@@ -39,10 +39,10 @@ namespace MainProject.API
             {
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("MSSQL"));
             });
+
             //builder.Services.AddScoped<CurrentUser>();
             builder.Services.AddMainServices();
             builder.Services.AddMainMassTransit(builder.Configuration["RabbitMQ:Username"]!, builder.Configuration["RabbitMQ:Password"]!, builder.Configuration["RabbitMQ:Hostname"]!, builder.Configuration["RabbitMQ:Port"]!);
-            //builder.Services.AddMainAuth(builder.Configuration["Jwt:Issuer"]!, builder.Configuration["Jwt:Audience"]!, builder.Configuration["Jwt:SigningKey"]!);
             builder.Services.AddAuth(builder.Configuration["Jwt:Issuer"]!, builder.Configuration["Jwt:Audience"]!, builder.Configuration["Jwt:SigningKey"]!);
             builder.Services.AddSharedServices(builder.Configuration);
 
