@@ -29,13 +29,25 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
+          "Host": "template-main-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/template/{everything}",
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
           "Host": "template-permission-service",
           "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/permission/{everything}",
       "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
-    },
+    }
     //{
     //  "DownstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
     //  "DownstreamScheme": "http",
