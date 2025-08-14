@@ -70,12 +70,6 @@ namespace ConfigComponent.Services
             await _configsCollection.ReplaceOneAsync(filter, updateDoc, new ReplaceOptions { IsUpsert = true });
         }
 
-        //public async Task DeleteUserConfigAsync()
-        //{
-        //    var filter = Builders<BsonDocument>.Filter.Eq("userId", _userId);
-        //    await _configsCollection.DeleteOneAsync(filter);
-        //}
-
         public async Task DeleteUserTableConfigAsync(string tableKey)
         {
             var filter = Builders<BsonDocument>.Filter.Eq("userId", _userId);

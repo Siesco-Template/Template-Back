@@ -12,6 +12,17 @@ services:
       - permission
     networks:
       - public-network
+  main:
+    container_name: template-main-service
+    build:
+      context: .
+      dockerfile: Main/MainProject.API/Dockerfile
+    ports:
+      - "5034:8080"
+    volumes:
+      - /Main/MainProject.API/wwwroot:/app/wwwroot 
+    networks:
+      - public-network
   auth:
     container_name: template-auth-service
     build:

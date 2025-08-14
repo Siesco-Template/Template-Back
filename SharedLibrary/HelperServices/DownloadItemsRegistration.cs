@@ -10,6 +10,7 @@ namespace SharedLibrary.HelperServices
         {
             builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection(MongoDbName));
             builder.Services.AddSingleton<MongoDbService>();
+            builder.Services.AddScoped<DownloadItemService>();
         }
     }
 }

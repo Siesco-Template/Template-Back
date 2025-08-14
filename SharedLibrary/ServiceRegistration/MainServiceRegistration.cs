@@ -1,16 +1,16 @@
 ﻿using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using SharedLibrary.Dtos.PermissionDtos;
-using System.Text;
-using SharedLibrary.HelperServices.Permission;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
-using SharedLibrary.Exceptions.Common;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SharedLibrary.Dtos.PermissionDtos;
+using SharedLibrary.Exceptions.Common;
+using SharedLibrary.HelperServices.Permission;
+using System.Text;
 
 namespace SharedLibrary.ServiceRegistration
 {
@@ -42,9 +42,7 @@ namespace SharedLibrary.ServiceRegistration
 
         public static void AddSharedServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddScoped<ICheckPermissionService, CheckPermissionService>();
             services.AddScoped<PageAndActionScannerForServices>();
-
             services.AddHttpClient<ICheckPermissionService, CheckPermissionService>(client =>
             {
                 var permissionServiceUrl = configuration["PermissionService:BaseUrl"];

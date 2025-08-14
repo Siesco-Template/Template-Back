@@ -5,6 +5,7 @@ using Auth.Business.Services;
 using Auth.Business.Utilies.Templates;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using TableComponent.Extensions;
 
 
 
@@ -21,6 +22,7 @@ namespace Auth.Business.Helpers
             services.AddScoped<EmailService>();
             services.AddScoped<CurrentUser>();
             services.AddScoped<AuthService>();
+            services.AddScoped<GetQueryHelper>();
         }
 
         public static void AddAuthMassTransit(this IServiceCollection services, string username, string password, string hostname, string port)

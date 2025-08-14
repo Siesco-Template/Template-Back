@@ -15,6 +15,7 @@
 	  <ProjectReference Include="..\..\FilterComponent\FilterComponent.csproj" />
 	  <ProjectReference Include="..\..\Folder\Folder.csproj" />
 	  <ProjectReference Include="..\..\SharedLibrary\SharedLibrary.csproj" />
+	  <ProjectReference Include="..\..\TableComponent\TableComponent.csproj" />
 	  <ProjectReference Include="..\Auth.DAL\Auth.DAL.csproj" />
 	</ItemGroup>
 
