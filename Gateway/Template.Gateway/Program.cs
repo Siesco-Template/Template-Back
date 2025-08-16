@@ -13,9 +13,10 @@ namespace Template.Gateway
             builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
                                   .AddJsonFile($"ocelot.{environment}.json", optional: true, reloadOnChange: true);
 
-            builder.Services.AddControllers();
+            builder.Services.AddOcelot(builder.Configuration);
+            builder.Services.AddSwaggerForOcelot(builder.Configuration);
 
-            builder.Services.AddOpenApi();
+            builder.Services.AddControllers();
 
             builder.Services.AddCors(options =>
             {
@@ -29,18 +30,12 @@ namespace Template.Gateway
                 });
             });
             builder.Services.AddHttpClient();
-            builder.Services.AddSwaggerForOcelot(builder.Configuration);
-            builder.Services.AddOcelot();
 
             var app = builder.Build();
 
             app.UseSwaggerForOcelotUI(opt =>
             {
                 opt.PathToSwaggerGenerator = "/swagger/docs";
-            }, uiOpt =>
-            {
-                uiOpt.RoutePrefix = "swagger"; // => http://gateway:5000/swagger
-                uiOpt.DocumentTitle = "My Gateway Swagger";
             });
 
             app.MapOpenApi();

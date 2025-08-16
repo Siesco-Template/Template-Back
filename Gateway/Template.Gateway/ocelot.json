@@ -22,8 +22,7 @@
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ],
-      "SwaggerKey": "Auth Service"
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
@@ -35,8 +34,7 @@
         }
       ],
       "UpstreamPathTemplate": "/template/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ],
-      "SwaggerKey": "Main Service"
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
@@ -48,8 +46,7 @@
         }
       ],
       "UpstreamPathTemplate": "/permission/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ],
-      "SwaggerKey": "Permission Service"
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
     }
     //{
     //  "DownstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
@@ -76,40 +73,6 @@
     //  "UpstreamHttpMethod": [ "GET" ]
     //}
   ],
-
-  "SwaggerEndPoints": [
-    {
-      "Key": "Auth Service",
-      "Config": [
-        {
-          "Name": "Auth Service",
-          "Version": "v1",
-          "Url": "http://65.108.38.170:5032/swagger/index.html"
-        }
-      ]
-    },
-    {
-      "Key": "Main Service",
-      "Config": [
-        {
-          "Name": "Main Service",
-          "Version": "v1",
-          "Url": "http://65.108.38.170:5034/swagger/index.html"
-        }
-      ]
-    },
-    {
-      "Key": "Permission Service",
-      "Config": [
-        {
-          "Name": "Permission Service",
-          "Version": "v1",
-          "Url": "http://65.108.38.170:5033/swagger/index.html"
-        }
-      ]
-    }
-  ],
-
   "GlobalConfiguration": {
     "BaseUrl": "http://template-gateway:8080"
   }

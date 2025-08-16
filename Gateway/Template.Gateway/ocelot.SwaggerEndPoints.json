@@ -1,0 +1,34 @@
+﻿{
+  "SwaggerEndPoints": [
+    {
+      "Key": "auth",
+      "Config": [
+        {
+          "Name": "Auth Service",
+          "Version": "v1",
+          "Url": "http://65.108.38.170:5032/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "main",
+      "Config": [
+        {
+          "Name": "Main Service",
+          "Version": "v1",
+          "Url": "http://65.108.38.170:5034/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "permission",
+      "Config": [
+        {
+          "Name": "Permission Service",
+          "Version": "v1",
+          "Url": "http://65.108.38.170:5033/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ]
+}
