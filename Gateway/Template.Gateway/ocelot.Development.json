@@ -10,7 +10,8 @@
         }
       ],
       "UpstreamPathTemplate": "/admin/hubs/export/negotiate",
-      "UpstreamHttpMethod": [ "POST", "OPTIONS" ]
+      "UpstreamHttpMethod": [ "POST", "OPTIONS" ],
+      "SwaggerKey": "Admin Service"
     },
     {
       "DownstreamPathTemplate": "/hubs/export",
@@ -22,7 +23,21 @@
         }
       ],
       "UpstreamPathTemplate": "/admin/hubs/export",
-      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ]
+      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+      "SwaggerKey": "Admin Service"
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5002
+        }
+      ],
+      "UpstreamPathTemplate": "/admin/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ],
+      "SwaggerKey": "Admin Service"
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
@@ -34,7 +49,8 @@
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ],
+      "SwaggerKey": "Auth Service"
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
@@ -46,7 +62,8 @@
         }
       ],
       "UpstreamPathTemplate": "/permission/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ],
+      "SwaggerKey": "Permission Service"
     },
     {
       "DownstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
@@ -58,7 +75,41 @@
         }
       ],
       "UpstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Auth Service"
+    }
+  ],
+
+  "SwaggerEndPoints": [
+    {
+      "Key": "Auth Service",
+      "Config": [
+        {
+          "Name": "Auth Service",
+          "Version": "v1",
+          "Url": "http://localhost:5001/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "Admin Service",
+      "Config": [
+        {
+          "Name": "Admin Service",
+          "Version": "v1",
+          "Url": "http://localhost:5002/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "Permission Service",
+      "Config": [
+        {
+          "Name": "Permission Service",
+          "Version": "v1",
+          "Url": "http://localhost:5003/swagger/v1/swagger.json"
+        }
+      ]
     }
   ],
 

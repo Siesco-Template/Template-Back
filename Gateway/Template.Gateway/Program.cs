@@ -28,15 +28,22 @@ namespace Template.Gateway
                         .AllowCredentials();
                 });
             });
-
+            builder.Services.AddHttpClient();
+            builder.Services.AddSwaggerForOcelot(builder.Configuration);
             builder.Services.AddOcelot();
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
+            app.UseSwaggerForOcelotUI(opt =>
             {
-                app.MapOpenApi();
-            }
+                opt.PathToSwaggerGenerator = "/swagger/docs";
+            }, uiOpt =>
+            {
+                uiOpt.RoutePrefix = "swagger"; // => http://gateway:5000/swagger
+                uiOpt.DocumentTitle = "My Gateway Swagger";
+            });
+
+            app.MapOpenApi();
 
             app.UseHttpsRedirection();
 
