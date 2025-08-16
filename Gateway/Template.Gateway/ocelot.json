@@ -1,79 +1,46 @@
 {
   "Routes": [
-    //{
-    //  "DownstreamPathTemplate": "/hubs/export",
-    //  "DownstreamScheme": "http",
-    //  "DownstreamHostAndPorts": [
-    //    {
-    //      "Host": "localhost",
-    //      "Port": 5002
-    //    }
-    //  ],
-    //  "UpstreamPathTemplate": "/afmis/hubs/export",
-    //  "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ]
-    //},
     {
       "DownstreamPathTemplate": "/api/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-auth-service",
-          "Port": 8080
+          "Host": "65.108.38.170",
+          "Port": 5032
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE", "PATCH", "OPTIONS" ],
+      "SwaggerKey": "Auth Service"
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-main-service",
-          "Port": 8080
+          "Host": "65.108.38.170",
+          "Port": 5034
         }
       ],
       "UpstreamPathTemplate": "/template/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE", "PATCH", "OPTIONS" ],
+      "SwaggerKey": "Main Service"
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-permission-service",
-          "Port": 8080
+          "Host": "65.108.38.170",
+          "Port": 5033
         }
       ],
       "UpstreamPathTemplate": "/permission/{everything}",
-      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE", "PATCH", "OPTIONS" ],
+      "SwaggerKey": "Permission Service"
     }
-    //{
-    //  "DownstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
-    //  "DownstreamScheme": "http",
-    //  "DownstreamHostAndPorts": [
-    //    {
-    //      "Host": "afmis-auth-service",
-    //      "Port": 8080
-    //    }
-    //  ],
-    //  "UpstreamPathTemplate": "/Files/Images/EmailImages/{fileName}",
-    //  "UpstreamHttpMethod": [ "GET" ]
-    //},
-    //{
-    //  "DownstreamPathTemplate": "/exports/{fileName}",
-    //  "DownstreamScheme": "http",
-    //  "DownstreamHostAndPorts": [
-    //    {
-    //      "Host": "afmis-main-service",
-    //      "Port": 8080
-    //    }
-    //  ],
-    //  "UpstreamPathTemplate": "/exports/{fileName}",
-    //  "UpstreamHttpMethod": [ "GET" ]
-    //}
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://template-gateway:8080"
+    "BaseUrl": "http://65.108.38.170:5031"
   }
 }
