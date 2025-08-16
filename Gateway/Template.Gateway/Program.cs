@@ -11,6 +11,7 @@ namespace Template.Gateway
 
             var environment = builder.Environment.EnvironmentName;
             builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
+                                  .AddJsonFile("ocelot.SwaggerEndPoints.json", optional: false, reloadOnChange: true)
                                   .AddJsonFile($"ocelot.{environment}.json", optional: true, reloadOnChange: true);
 
             builder.Services.AddOcelot(builder.Configuration);
