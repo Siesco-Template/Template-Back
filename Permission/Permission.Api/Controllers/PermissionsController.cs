@@ -1,9 +1,6 @@
 ﻿using MassTransit;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using Permission.Api.Dtos;
-using Permission.Api.Entities;
 using Permission.Api.Services;
 using SharedLibrary.Attributes;
 using SharedLibrary.Dtos.PermissionDtos;
@@ -11,7 +8,6 @@ using SharedLibrary.HelperServices.Permission;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
 using SharedLibrary.StaticDatas;
-using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 

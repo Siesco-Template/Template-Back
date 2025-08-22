@@ -2,7 +2,6 @@
 using Auth.Business.Services;
 using Auth.Business.Utilies.PasswordUtilities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SharedLibrary.Attributes;
 using SharedLibrary.Enums;
@@ -107,9 +106,9 @@ namespace Auth.API.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> CheckUserExist(string email ,string phoneNumber)
+        public async Task<IActionResult> CheckUserExist(string email, string phoneNumber)
         {
-            await _authService.CheckUserExistAsync(email ,phoneNumber);
+            await _authService.CheckUserExistAsync(email, phoneNumber);
             return Ok();
         }
 
@@ -118,6 +117,5 @@ namespace Auth.API.Controllers
         {
             return Ok(await _authService.GetAllUsersForPermissionAsync());
         }
-
     }
 }
