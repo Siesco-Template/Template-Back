@@ -1,12 +1,7 @@
-﻿using Auth.Business.Exceptions.Base;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
+using SharedLibrary.Exceptions.Common;
 
-namespace Auth.Business.Exceptions
+namespace SharedLibrary.Exceptions
 {
     public class LoginFailedException : Exception, IBaseException
     {

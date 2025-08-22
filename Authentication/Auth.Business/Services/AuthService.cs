@@ -149,6 +149,9 @@ namespace Auth.Business.Services
             PasswordChecker.CheckPasswordAndThrowException(dto.NewPassword.Trim());
             PasswordChecker.CheckPasswordAndThrowException(dto.NewConfirmPassword.Trim());
 
+            if(dto.OldPassword == dto.NewPassword)
+                throw new BadRequestException("Yeni şifrəniz köhnə ilə eynidir.Fərqli şifrə daxil edin");
+
             if (dto.NewPassword != dto.NewConfirmPassword)
                 throw new BadRequestException("Şifrələr uyğunlaşmır");
 
