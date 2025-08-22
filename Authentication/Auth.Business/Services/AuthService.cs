@@ -155,7 +155,7 @@ namespace Auth.Business.Services
             var user = await GetUserById((Guid)_currentUser.UserGuid);
 
             if (user.Password != _tokenService.GeneratePasswordHash(dto.OldPassword))
-                throw new Exception("Köhnə şifrə doğru deyil");
+                throw new BadRequestException("Köhnə şifrə doğru deyil");
 
             user.Password = _tokenService.GeneratePasswordHash(dto.NewPassword);
             await _context.SaveChangesAsync();
@@ -206,7 +206,7 @@ namespace Auth.Business.Services
 
             string newPassword = _tokenService.GeneratePasswordHash(dto.NewPassword);
 
-            if (user.Password == newPassword) throw new Exception("Yeni şifrəniz köhnə ilə eynidir.Fərqli şifrə daxil edin");
+            if (user.Password == newPassword) throw new BadRequestException("Yeni şifrəniz köhnə ilə eynidir.Fərqli şifrə daxil edin");
 
             user.Password = newPassword;
 
@@ -229,9 +229,9 @@ namespace Auth.Business.Services
             if (existUser != null)
             {
                 if (existUser.Email == dto.Email)
-                    throw new Exception("Email mövcuddur!");
+                    throw new BadRequestException("Email mövcuddur!");
                 if (existUser.PhoneNumber == dto.PhoneNumber)
-                    throw new Exception("Telefon nömrəsi mövcuddur!");
+                    throw new BadRequestException("Telefon nömrəsi mövcuddur!");
             }
 
             string password = PasswordChecker.GenerateRandomPassword();
@@ -357,9 +357,9 @@ namespace Auth.Business.Services
             if (existUser != null)
             {
                 if (existUser.Email == dto.Email)
-                    throw new Exception("Email mövcuddur!");
+                    throw new BadRequestException("Email mövcuddur!");
                 if (existUser.PhoneNumber == dto.PhoneNumber)
-                    throw new Exception("Telefon nömrəsi mövcuddur!");
+                    throw new BadRequestException("Telefon nömrəsi mövcuddur!");
             }
 
             user.FirstName = dto.FirstName.Trim();
@@ -409,9 +409,9 @@ namespace Auth.Business.Services
             if (existUser != null)
             {
                 if (existUser.Email == email)
-                    throw new Exception("Email mövcuddur!");
+                    throw new BadRequestException("Email mövcuddur!");
                 if (existUser.PhoneNumber == phoneNumber)
-                    throw new Exception("Telefon nömrəsi mövcuddur!");
+                    throw new BadRequestException("Telefon nömrəsi mövcuddur!");
             }
         }
 
