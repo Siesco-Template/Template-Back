@@ -8,12 +8,10 @@ using Auth.Core.Entities;
 using Auth.DAL.Contexts;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using SharedLibrary.Dtos.Common;
 using SharedLibrary.Dtos.PermissionDtos;
 using SharedLibrary.Enums;
 using SharedLibrary.Events;
 using SharedLibrary.Exceptions;
-using SharedLibrary.StaticDatas;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -72,7 +70,7 @@ namespace Auth.Business.Services
             });
         }
 
-        public async Task<TokenResponseDto> LoginAsync(LoginDto dto)    
+        public async Task<TokenResponseDto> LoginAsync(LoginDto dto)
         {
             var user = await _context.AppUsers.FirstOrDefaultAsync(x => x.Email == dto.EmailOrUserName)
                 ?? throw new LoginFailedException();
@@ -101,6 +99,7 @@ namespace Auth.Business.Services
 
             var responseDto = new TokenResponseDto
             {
+                UserId = user.Id.ToString(),
                 FullName = user.FirstName + " " + user.LastName,
                 UserRole = user.UserRole,
                 AccessToken = accessToken,
@@ -164,10 +163,10 @@ namespace Auth.Business.Services
 
         public async Task ForgetPasswordAsync(string email)
         {
-            var user = await _context.AppUsers.Include(x=> x.PasswordToken).FirstOrDefaultAsync(x => x.Email == email);
+            var user = await _context.AppUsers.Include(x => x.PasswordToken).FirstOrDefaultAsync(x => x.Email == email);
             if (user != null)
             {
-                if(user.PasswordToken != null)
+                if (user.PasswordToken != null)
                 {
                     _context.Remove(user.PasswordToken);
                     await _context.SaveChangesAsync();
@@ -278,7 +277,7 @@ namespace Auth.Business.Services
             //    ExpireDate = DateTime.Now.AddHours(8)
             //});
             //await _context.SaveChangesAsync();
-            
+
             await _publish.Publish(new UserRegisteredPermissionEvent
             {
                 UserId = user.Id,
@@ -419,7 +418,7 @@ namespace Auth.Business.Services
         public async Task<List<UserDto>> GetAllUsersForPermissionAsync()
         {
             var allUsers = await _context.AppUsers
-                 //.Where(x => x.UserRole != UserRole.SuperAdmin)
+                //.Where(x => x.UserRole != UserRole.SuperAdmin)
                 .ToListAsync();
 
             var users = allUsers.Select(user => new UserDto

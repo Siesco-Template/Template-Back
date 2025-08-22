@@ -30,7 +30,7 @@ namespace Folder.HelperServices
             for (int i = segments.Length; i > 0; i--)
             {
                 var partialPath = "/" + string.Join("/", segments.Take(i)); // /Users/A/B, sonra /Users/A, sonra /Users
-                var folder = FolderTreeHelper.FindFolderRecursive(rootFolder, partialPath);
+                var folder = FindFolderRecursive(rootFolder, partialPath);
                 if (folder != null)
                     folder.UpdateDate = DateTime.UtcNow;
             }
@@ -49,7 +49,7 @@ namespace Folder.HelperServices
                 Files = source.Files.ToList(),
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
-                Children = new List<FolderEntity<TFile>>()
+                Children = []
             };
 
             foreach (var child in source.Children)
