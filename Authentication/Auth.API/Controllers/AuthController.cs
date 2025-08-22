@@ -33,6 +33,7 @@ namespace Auth.API.Controllers
             return Ok(await _authService.LoginWithRefreshTokenAsync(refreshToken));
         }
 
+        [Authorize]
         [HttpPost("[action]")]
         public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
         {

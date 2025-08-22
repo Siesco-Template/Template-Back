@@ -163,7 +163,8 @@ namespace Auth.Business.Services
 
         public async Task ForgetPasswordAsync(string email)
         {
-            var user = await _context.AppUsers.Include(x => x.PasswordToken).FirstOrDefaultAsync(x => x.Email == email);
+            var user = await _context.AppUsers.Include(x => x.PasswordToken).FirstOrDefaultAsync(x => x.Email == email) 
+                                    ?? throw new BadRequestException("İstifadəçi mövcüd deyil!");
             if (user != null)
             {
                 if (user.PasswordToken != null)
