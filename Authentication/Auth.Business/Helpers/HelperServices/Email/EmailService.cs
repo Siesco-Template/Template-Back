@@ -1,18 +1,12 @@
 ﻿using Auth.Business.Models;
 using Auth.Business.Utilies.Templates;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Auth.Core.Entities;
+using System.Net.Mail;
 
 namespace Auth.Business.Helpers.HelperServices.Email
 {
-    public class EmailService(IOptions<SmtpSettings> smtpSettings , EmailTemplate _emailTemplate)
+    public class EmailService(IOptions<SmtpSettings> smtpSettings, EmailTemplate _emailTemplate)
     {
         private readonly SmtpSettings _smtpSettings = smtpSettings.Value;
 
@@ -24,7 +18,6 @@ namespace Auth.Business.Helpers.HelperServices.Email
                 Subject = "Şifrənizi yeniləyin...",
                 Content = _emailTemplate.ResetPassword(token, fullName)
             });
-
         }
 
         public async Task SendRegister(string toEmail, string fullName)
@@ -53,10 +46,10 @@ namespace Auth.Business.Helpers.HelperServices.Email
                 Content = _emailTemplate.ChangedPasswordByAdmin(fullName, password)
             });
         }
-        
+
         private async Task SendEmailAsync(string toEmail, EmailMessage emailMessage)
         {
-            var fromAddress = new MailAddress(_smtpSettings.Username, "AFMIS");
+            var fromAddress = new MailAddress(_smtpSettings.Username, "Template");
             var toAddress = new MailAddress(toEmail);
             string fromPassword = _smtpSettings.Password;
             string subject = emailMessage.Subject;

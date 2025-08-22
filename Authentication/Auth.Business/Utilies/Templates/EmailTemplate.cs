@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Auth.Business.Utilies.Templates
 {
@@ -71,7 +66,7 @@ namespace Auth.Business.Utilies.Templates
             <!-- Button -->
             <tr>
               <td style=""text-align: center; box-sizing: border-box;"">
-                <a href='{host}/{token}' style=""background-color:#0068F7; color:#fff; padding:7.5px 40px; text-decoration:none; border-radius:12px; border: 1px solid #8ABAFB; font-size:14px; line-height: 1.5; font-weight: 500; display:inline-block; box-sizing: border-box;"">
+                <a href='https://template.miclosol.az/set-password/{token}' style=""background-color:#0068F7; color:#fff; padding:7.5px 40px; text-decoration:none; border-radius:12px; border: 1px solid #8ABAFB; font-size:14px; line-height: 1.5; font-weight: 500; display:inline-block; box-sizing: border-box;"">
                   Şifrənizi yeniləyin
                 </a>
               </td>
