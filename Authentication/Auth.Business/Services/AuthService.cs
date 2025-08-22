@@ -202,7 +202,7 @@ namespace Auth.Business.Services
                 ?? throw new NotFoundException("İstifadəçi mövcud deyil");
 
             var passwordToken = await _context.PasswordTokens.FirstOrDefaultAsync(pt =>
-               pt.Token == dto.Token && pt.AppUserId == user.Id && pt.ExpireDate > DateTime.Now) ?? throw new Exception();
+               pt.Token == dto.Token && pt.AppUserId == user.Id && pt.ExpireDate > DateTime.Now) ?? throw new BadRequestException();
 
             string newPassword = _tokenService.GeneratePasswordHash(dto.NewPassword);
 

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using SharedLibrary.Exceptions;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Auth.Business.Utilies.PasswordUtilities
 {
@@ -58,7 +55,7 @@ namespace Auth.Business.Utilies.PasswordUtilities
                 password.Any(char.IsUpper) &&
                 password.Any(char.IsNumber) &&
                 password.Any(char.IsPunctuation)))
-            throw new Exception("Ən az 8 xarakter, 1 böyük hərf, 1 rəqəm və simvol");
+                throw new BadRequestException("Ən az 8 xarakter, 1 böyük hərf, 1 rəqəm və simvol");
         }
     }
 }
