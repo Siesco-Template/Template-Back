@@ -4,6 +4,7 @@ using MainProject.API.DAL.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MainProject.API.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    partial class MainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250905132745_table_catalog")]
+    partial class table_catalog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -247,11 +250,6 @@ namespace MainProject.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("CatalogId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("CatalogPath")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -267,7 +265,7 @@ namespace MainProject.API.Migrations
                     b.HasIndex("TableId", "CatalogPath")
                         .IsUnique();
 
-                    b.ToTable("TableCatalogs");
+                    b.ToTable("TableCategories");
                 });
 
             modelBuilder.Entity("MainProject.API.Domain.Entities.User", b =>

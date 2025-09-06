@@ -14,7 +14,7 @@ namespace MainProject.API.DAL.Contexts
         public DbSet<Sale> Sales { get; set; }
         public DbSet<User> AppUsers { get; set; }
         public DbSet<FolderUser> Users { get; set; }
-
+        public DbSet<TableCatalog> TableCatalogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

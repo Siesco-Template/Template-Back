@@ -82,7 +82,7 @@ namespace Auth.Business.Services
             {
                 if (user.LockDownDate != null && user.LockDownDate > DateTime.Now)
                 {
-                    throw new LoginFailedException(user.BlockInformation + " səbəbinə görə" + user.LockDownDate.ToString() + " tarixinə qədər bloklanmısınız");
+                    throw new LoginFailedException(user.BlockInformation + " səbəbinə görə" + user.LockDownDate.ToString() + " " + " tarixinə qədər bloklanmısınız");
                 }
                 else if (user.LockDownDate == null)
                 {
