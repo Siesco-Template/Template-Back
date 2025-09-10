@@ -62,8 +62,9 @@ namespace MainProject.API.Controllers
 
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetFoldersAndFiles([FromQuery] string path = RootFolders.Users)
+        public async Task<IActionResult> GetFoldersAndFiles([FromQuery] string path)
         {
+            if (path == "/") throw new BadRequestException("ele shey eleme brat");
             var folder = await _folderService.GetFolderByPathAsync(path)
                          ?? throw new NotFoundException("Qovluq tapılmadı.");
 

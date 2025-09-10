@@ -2,6 +2,7 @@
 using Folder.Dtos.FolderDtos;
 using Folder.Entities;
 using Folder.HelperServices;
+using Folder.Roots;
 using Folder.Utilities;
 using MongoDB.Driver;
 using System.Text.Json;
@@ -40,7 +41,7 @@ namespace Folder.Services.FolderServices
                     Name = _rootPath.Trim('/'),
                     Path = _rootPath,
                     Children = new(),
-                    Files = new()
+                    Files = []
                 };
                 await _collection.InsertOneAsync(root);
             }
@@ -70,7 +71,7 @@ namespace Folder.Services.FolderServices
                 Children = new(),
                 Files = new(),
                 CreateDate = DateTime.UtcNow,
-                UpdateDate = DateTime.UtcNow,   
+                UpdateDate = DateTime.UtcNow,
                 Icon = icon
             };
 
@@ -118,7 +119,6 @@ namespace Folder.Services.FolderServices
             FolderTreeHelper.UpdateParentDates(root, parentPath);
             await SaveRootAsync(root);
         }
-
 
         public async Task BulkDeleteFoldersAsync(List<string> paths)
         {
@@ -170,8 +170,6 @@ namespace Folder.Services.FolderServices
             await SaveRootAsync(root);
         }
 
-
-
         public async Task BulkCopyFoldersAsync(string sourceParentPath, string targetParentPath, List<string> folderNames)
         {
             var rootFolder = await GetRootFolderAsync();
@@ -219,7 +217,7 @@ namespace Folder.Services.FolderServices
             var existingFolderNames = targetFolder.Children.Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var existingFileNames = targetFolder.Files?.Select(f => f.FileName).ToHashSet(StringComparer.OrdinalIgnoreCase)
                                   ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-           
+
             if (dto.FoldersToCopy != null)
             {
                 foreach (var folderItem in dto.FoldersToCopy)
@@ -302,8 +300,6 @@ namespace Folder.Services.FolderServices
             await SaveRootAsync(rootFolder);
         }
 
-
-
         public async Task BulkMoveFoldersAsync(string sourceParentPath, string targetParentPath, List<string> folderNames)
         {
             var root = await GetRootFolderAsync();
@@ -314,7 +310,7 @@ namespace Folder.Services.FolderServices
 
             var conflicting = folderNames.Intersect(targetParent.Children.Select(c => c.Name)).ToList();
             if (conflicting.Any())
-                    throw new BadRequestException($"Hədəf qovluqda artıq bu qovluqlar mövcuddur: {string.Join(", ", conflicting)}");
+                throw new BadRequestException($"Hədəf qovluqda artıq bu qovluqlar mövcuddur: {string.Join(", ", conflicting)}");
             var foldersToMove = sourceParent.Children
                 .Where(c => folderNames.Contains(c.Name))
                 .ToList();
@@ -335,7 +331,6 @@ namespace Folder.Services.FolderServices
             FolderTreeHelper.UpdateParentDates(root, targetParentPath);
             await SaveRootAsync(root);
         }
-
 
         public async Task MoveFromMultipleSourcesAsync(MultiSourceCopyMoveDto dto)
         {
@@ -433,8 +428,6 @@ namespace Folder.Services.FolderServices
             await SaveRootAsync(rootFolder);
         }
 
-
-
         public async Task AddCommentAsync(string path, string? comment)
         {
             var root = await GetRootFolderAsync();
@@ -467,7 +460,7 @@ namespace Folder.Services.FolderServices
             foreach (var file in folderToProcess.Files.OfType<BaseFile>())
             {
                 var (prefix, numberLength) = CodeParsingHelper.ExtractPrefixAndLength(file.Code);
-                var existingCodes = FolderTreeHelper.GetAllCodesWithPrefix(rootFolder, prefix); 
+                var existingCodes = FolderTreeHelper.GetAllCodesWithPrefix(rootFolder, prefix);
                 file.Code = FileCodeGenerator.GenerateNextCode(existingCodes, prefix, numberLength);
             }
 
