@@ -190,7 +190,7 @@ namespace FilterComponent.Services
             {
                 query = query.Where(IQueryableExtensions.GenerateQuery(filterDto.Filters)!);
             }
-            else
+            else if(filterDto.TableId != null)
             {
                 string? filter = await GetDefaultFilterQuery(filterDto.TableId);
                 if (filter != null)
