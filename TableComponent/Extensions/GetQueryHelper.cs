@@ -25,7 +25,7 @@ namespace TableComponent.Extensions
         {
             var entityType = _setProvider.GetEntityType(tableRequest.TableId) ?? throw new Exception("Cədvəl tapılmadı.");
             var query = (IQueryable<dynamic>)_setProvider.GetQueryable(entityType);
-            var filteredQuery = await _filterService.ApplyFilter(query, new FilterDto { Filters = tableRequest.Filters, TableId = tableRequest.TableId });
+            var filteredQuery = await _filterService.ApplyFilter(query, new FilterDto { Filters = tableRequest.Filters, TableId = !tableRequest.InitialFilter ? tableRequest.TableId : null});
             filteredQuery = filteredQuery.ApplySorting(entityType, tableRequest.SortBy, tableRequest.SortDirection);
             return DynamicProjectionHelper.GetSelectedColumns(filteredQuery, tableRequest.Columns);
         }
