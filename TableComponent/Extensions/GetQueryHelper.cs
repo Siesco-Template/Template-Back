@@ -23,9 +23,9 @@ namespace TableComponent.Extensions
 
         private async Task<IQueryable<dynamic>> GenerateQuery(TableQueryRequest tableRequest)
         {
-            var entityType = _setProvider.GetEntityType(tableRequest.FilterDto.TableId) ?? throw new Exception("Cədvəl tapılmadı.");
+            var entityType = _setProvider.GetEntityType(tableRequest.TableId) ?? throw new Exception("Cədvəl tapılmadı.");
             var query = (IQueryable<dynamic>)_setProvider.GetQueryable(entityType);
-            var filteredQuery = await _filterService.ApplyFilter(query, tableRequest.FilterDto);
+            var filteredQuery = await _filterService.ApplyFilter(query, new FilterDto { Filters = tableRequest.Filters, TableId = !tableRequest.InitialFilter ? tableRequest.TableId : null});
             filteredQuery = filteredQuery.ApplySorting(entityType, tableRequest.SortBy, tableRequest.SortDirection);
             return DynamicProjectionHelper.GetSelectedColumns(filteredQuery, tableRequest.Columns);
         }
