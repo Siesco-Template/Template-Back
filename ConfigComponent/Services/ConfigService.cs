@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 using SharedLibrary.HelperServices;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace ConfigComponent.Services
@@ -52,22 +53,66 @@ namespace ConfigComponent.Services
             };
         }
 
-        public async Task CreateOrUpdateUserConfigAsync(Dictionary<string, object> overrides)
+        public async Task CreateOrUpdateUserConfigAsync(Dictionary<string, object?> overrides)
         {
-            var bsonOverrides = new BsonDocument();
-            foreach (var kvp in overrides)
-            {
-                bsonOverrides.Add(kvp.Key, BsonValue.Create(kvp.Value));
-            }
+            if (overrides == null) return;
 
             var filter = Builders<BsonDocument>.Filter.Eq("userId", _userId);
-            var updateDoc = new BsonDocument
+            var existing = await _configsCollection.Find(filter).FirstOrDefaultAsync();
+
+            var doc = existing ?? new BsonDocument { ["userId"] = _userId };
+            var ovDoc = (doc.TryGetValue("overrides", out var ovVal) && ovVal.IsBsonDocument)
+                ? ovVal.AsBsonDocument
+                : [];
+
+            foreach (var (key, val) in overrides)
             {
-                { "userId", _userId },
-                { "overrides", bsonOverrides }
+                if (val is null || (val is JsonElement je && je.ValueKind == JsonValueKind.Null))
+                {
+                    if (ovDoc.Contains(key)) ovDoc.Remove(key);
+                    continue;
+                }
+
+                ovDoc[key] = ToBson(val);
+            }
+
+            var update = Builders<BsonDocument>.Update
+                .Set("overrides", ovDoc)
+                .SetOnInsert("userId", _userId);
+
+            await _configsCollection.UpdateOneAsync(
+                filter,
+                update,
+                new UpdateOptions { IsUpsert = true }
+            );
+        }
+
+        private static BsonValue ToBson(object val)
+        {
+            if (val is JsonElement el) return FromJsonElement(el);
+            return BsonValue.Create(val);
+        }
+
+        private static BsonValue FromJsonElement(JsonElement el) =>
+            el.ValueKind switch
+            {
+                JsonValueKind.Null => BsonNull.Value,
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.String => el.GetString(),
+                JsonValueKind.Number => el.TryGetInt64(out var l) ? (BsonValue)l :
+                                        el.TryGetDouble(out var d) ? d : (BsonValue)el.GetDecimal(),
+                JsonValueKind.Array => new BsonArray(el.EnumerateArray().Select(FromJsonElement)),
+                JsonValueKind.Object => JsonObjToBson(el),
+                _ => BsonNull.Value
             };
 
-            await _configsCollection.ReplaceOneAsync(filter, updateDoc, new ReplaceOptions { IsUpsert = true });
+        private static BsonDocument JsonObjToBson(JsonElement obj)
+        {
+            var d = new BsonDocument();
+            foreach (var p in obj.EnumerateObject())
+                d[p.Name] = FromJsonElement(p.Value);
+            return d;
         }
 
         public async Task DeleteUserTableConfigAsync(string tableKey)

@@ -60,11 +60,11 @@ namespace MainProject.API.Controllers
             return Ok(files);
         }
 
-
         [HttpGet("[action]")]
         public async Task<IActionResult> GetFoldersAndFiles([FromQuery] string path)
         {
-            if (path == "/") throw new BadRequestException("ele shey eleme brat");
+            if (path == "/") throw new BadRequestException();
+
             var folder = await _folderService.GetFolderByPathAsync(path)
                          ?? throw new NotFoundException("Qovluq tapılmadı.");
 
