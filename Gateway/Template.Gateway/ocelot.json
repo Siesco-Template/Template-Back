@@ -2,10 +2,10 @@
   "Routes": [
     {
       "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "https://template-auth-api.microsol.az"
+          "Host": "template-auth-api.microsol.az"
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
@@ -14,10 +14,10 @@
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "https://template-main-api.microsol.az"
+          "Host": "template-main-api.microsol.az"
         }
       ],
       "UpstreamPathTemplate": "/template/{everything}",
@@ -26,10 +26,10 @@
     },
     {
       "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "https://template-permission-api.microsol.az"
+          "Host": "template-permission-api.microsol.az"
         }
       ],
       "UpstreamPathTemplate": "/permission/{everything}",
