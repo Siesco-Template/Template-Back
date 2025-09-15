@@ -5,7 +5,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-auth-service",
+          "Host": "http://template-auth-service",
           "Port": 5032
         }
       ],
@@ -41,6 +41,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://template-gateway:8080"
+    "BaseUrl": "https://template-api.microsol.az"
   }
 }
