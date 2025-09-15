@@ -5,8 +5,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "http://template-auth-service",
-          "Port": 5032
+          "Host": "https://template-auth-api.microsol.az"
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
@@ -18,7 +17,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-main-service",
+          "Host": "http://template-main-service/",
           "Port": 5034
         }
       ],
@@ -31,7 +30,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-permission-service",
+          "Host": "http://template-permission-api.microsol.az",
           "Port": 5033
         }
       ],
