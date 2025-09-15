@@ -41,6 +41,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://template-api.microsol.az"
+    "BaseUrl": "template-gateway:8080"
   }
 }
