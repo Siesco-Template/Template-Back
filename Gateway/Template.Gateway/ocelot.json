@@ -5,7 +5,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "65.108.38.170",
+          "Host": "template-auth-service",
           "Port": 5032
         }
       ],
@@ -18,7 +18,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "65.108.38.170",
+          "Host": "template-main-service",
           "Port": 5034
         }
       ],
@@ -31,7 +31,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "65.108.38.170",
+          "Host": "template-permission-service",
           "Port": 5033
         }
       ],
@@ -41,6 +41,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://65.108.38.170:5031"
+    "BaseUrl": "https://template-api.microsol.az/"
   }
 }

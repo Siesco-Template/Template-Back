@@ -6,7 +6,7 @@
         {
           "Name": "AuthService",
           "Version": "v1",
-          "Url": "http://65.108.38.170:5032/swagger/v1/swagger.json"
+          "Url": "https://template-auth-api.microsol.az/swagger/v1/swagger.json"
         }
       ]
     },
@@ -16,7 +16,7 @@
         {
           "Name": "MainService",
           "Version": "v1",
-          "Url": "http://65.108.38.170:5034/swagger/v1/swagger.json"
+          "Url": "https://template-main-api.microsol.az/swagger/v1/swagger.json"
         }
       ]
     },
@@ -26,7 +26,7 @@
         {
           "Name": "PermissionService",
           "Version": "v1",
-          "Url": "http://65.108.38.170:5033/swagger/v1/swagger.json"
+          "Url": "http://template-permission-api.microsol.az/swagger/v1/swagger.json"
         }
       ]
     }
