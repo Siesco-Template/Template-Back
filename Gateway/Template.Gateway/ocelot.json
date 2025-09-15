@@ -17,8 +17,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "http://template-main-service/",
-          "Port": 5034
+          "Host": "template-main-api.microsol.az"
         }
       ],
       "UpstreamPathTemplate": "/template/{everything}",
@@ -30,16 +29,12 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "http://template-permission-api.microsol.az",
-          "Port": 5033
+          "Host": "template-permission-api.microsol.az"
         }
       ],
       "UpstreamPathTemplate": "/permission/{everything}",
       "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE", "PATCH", "OPTIONS" ],
       "SwaggerKey": "Permission Service"
     }
-  ],
-  "GlobalConfiguration": {
-    "BaseUrl": "https://template-api.microsol.az"
-  }
+  ]
 }
