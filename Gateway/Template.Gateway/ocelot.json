@@ -5,7 +5,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "https://template-auth-api.microsol.az"
+          "Host": "template-auth-api.microsol.az"
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
