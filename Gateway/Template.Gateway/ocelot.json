@@ -6,7 +6,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "template-auth-service",
-          "Port": 5032
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
@@ -18,7 +18,8 @@
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-main-api.microsol.az"
+          "Host": "template-main-service",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/template/{everything}",
@@ -30,7 +31,8 @@
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-permission-api.microsol.az"
+          "Host": "template-permission-service",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/permission/{everything}",
