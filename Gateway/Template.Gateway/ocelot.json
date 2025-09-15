@@ -2,10 +2,11 @@
   "Routes": [
     {
       "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-auth-api.microsol.az"
+          "Host": "template-auth-service",
+          "Port": 5032
         }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
