@@ -1,11 +1,11 @@
 ﻿using Folder.Dtos.FolderDtos;
 using Folder.Dtos.FolderFileDtos;
 
-namespace Auth.Business.Dtos.UserFileDtos
+namespace MainProject.API.Business.Dtos.UserFileDtos
 {
     public class FoldersAndFilesDto
     {
-        public List<FolderDto> Folders { get; set; } = new();
-        public List<FileDto> Files { get; set; } = new();
+        public List<FolderDto> Folders { get; set; } = [];
+        public List<FileDto> Files { get; set; } = [];
     }
 }

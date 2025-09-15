@@ -2,7 +2,6 @@
 using Folder.Dtos.FolderDtos;
 using Folder.Entities;
 using Folder.HelperServices;
-using Folder.Roots;
 using Folder.Utilities;
 using MongoDB.Driver;
 using System.Text.Json;
@@ -24,7 +23,7 @@ namespace Folder.Services.FolderServices
 
         public async Task<FolderEntity<TFile>?> GetFolderByPathAsync(string path)
         {
-            if (path == _rootPath)
+            if (path.TrimEnd('/') == _rootPath)
                 return await GetRootFolderAsync();
 
             var rootFolder = await GetRootFolderAsync();
@@ -40,7 +39,7 @@ namespace Folder.Services.FolderServices
                 {
                     Name = _rootPath.Trim('/'),
                     Path = _rootPath,
-                    Children = new(),
+                    Children = [],
                     Files = []
                 };
                 await _collection.InsertOneAsync(root);

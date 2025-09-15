@@ -1,4 +1,4 @@
-﻿namespace Auth.Business.Dtos.UserFileDtos
+﻿namespace MainProject.API.Business.Dtos.UserFileDtos
 {
     public class CreateUserFileDto
     {

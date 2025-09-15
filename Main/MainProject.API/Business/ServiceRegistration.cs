@@ -23,6 +23,7 @@ namespace MainProject.API.Business
             services.AddScoped<DbContext, MainDbContext>();
             services.AddScoped<EntitySetProvider>();
             services.AddScoped<ReportService>();
+            services.AddScoped<ReportFileService>();
             services.AddScoped<GetQueryHelper>();
             services.AddScoped<RuleProvider>();
             services.AddScoped<ExportQueryHelper>();
