@@ -26,7 +26,7 @@
         {
           "Name": "PermissionService",
           "Version": "v1",
-          "Url": "http://template-permission-api.microsol.az/swagger/v1/swagger.json"
+          "Url": "https://template-permission-api.microsol.az/swagger/v1/swagger.json"
         }
       ]
     }
