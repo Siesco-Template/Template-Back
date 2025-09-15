@@ -36,5 +36,8 @@
       "UpstreamHttpMethod": [ "POST", "GET", "PUT", "DELETE", "PATCH", "OPTIONS" ],
       "SwaggerKey": "Permission Service"
     }
-  ]
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://template-api.microsol.az"
+  }
 }
