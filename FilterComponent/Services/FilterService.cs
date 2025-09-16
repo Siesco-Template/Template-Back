@@ -1,11 +1,10 @@
 ﻿using FilterComponent.Dtos;
 using FilterComponent.Entities;
 using FilterComponent.Extensions;
-using Microsoft.AspNetCore.Http;
 using MongoDB.Driver;
+using QueryGenerator.Core;
 using SharedLibrary.Exceptions;
 using SharedLibrary.HelperServices;
-using QueryGenerator.Core;
 
 namespace FilterComponent.Services
 {
@@ -189,7 +188,7 @@ namespace FilterComponent.Services
             {
                 query = query.Where(IQueryableExtensions.GenerateQuery(filterDto.Filters)!);
             }
-            else if(filterDto.TableId != null)
+            else if (filterDto.TableId != null)
             {
                 string? filter = await GetDefaultFilterQuery(filterDto.TableId);
                 if (filter != null)

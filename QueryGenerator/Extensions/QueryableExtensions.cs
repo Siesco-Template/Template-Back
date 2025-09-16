@@ -6,7 +6,7 @@ namespace QueryGenerator.Extensions
 {
     public static class QueryableExtensions
     {
-        private static readonly List<int> AllowedPageSizes = [10, 20, 50, 100];
+        private static readonly List<int> AllowedPageSizes = [5, 10, 20, 50, 100];
         public static IQueryable<T> ApplySorting<T>(this IQueryable<T> source, Type entityType, string? sortBy, bool? sortDirection)
         {
             if (string.IsNullOrWhiteSpace(sortBy))
@@ -43,7 +43,7 @@ namespace QueryGenerator.Extensions
 
             if (request.IsInfiniteScroll)
             {
-                take = AllowedPageSizes.Contains(take) ? take : 20;
+                take = AllowedPageSizes.Contains(take) ? take : 5;
             }
 
             var items = query
