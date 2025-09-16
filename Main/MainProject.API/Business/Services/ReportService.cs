@@ -57,7 +57,7 @@ namespace MainProject.API.Business.Services
                     ClassificationCode1 = x.ClassificationCode1,
                     ClassificationCode2 = x.ClassificationCode2,
                     OrganizationId = x.OrganizationId,
-                    OrganizationName = x.Organization.ShortName,
+                    OrganizationName = x.Organization.Name,
                     FuntionalClassificationCode = x.FuntionalClassificationCode,
                     ReportDetails = x.ReportDetails.Select(y => new ReportDetailDto
                     {
