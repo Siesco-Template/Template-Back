@@ -26,7 +26,7 @@ namespace TableComponent.Extensions
         public async Task<PaginationResult> GetCatalog(CatalogQueryRequest catalogRequest)
         {
             var finalQuery = await GenerateCatalogQuery(catalogRequest);
-            return finalQuery.ApplyPagination(catalogRequest.Pagination);
+            return finalQuery.ApplyInfiniteScroll(catalogRequest.Page);
         }
 
         private async Task<IQueryable<dynamic>> GenerateQuery(TableQueryRequest tableRequest)

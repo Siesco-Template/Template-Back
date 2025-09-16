@@ -59,5 +59,24 @@ namespace QueryGenerator.Extensions
                 Take = take
             };
         }
+
+        public static PaginationResult ApplyInfiniteScroll(this IQueryable query, int page)
+        {
+            var take = 5;
+            var totalCount = query.Count();
+
+            var items = query
+                .Skip((page - 1) * take)
+                .Take(take)
+                .ToDynamicList();
+
+            return new PaginationResult
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                Take = take
+            };
+        }
     }
 }
