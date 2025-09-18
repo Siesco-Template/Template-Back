@@ -164,7 +164,7 @@ namespace Permission.Api.Services
             Guid superAdminGuid = Guid.Parse(SuperAdminData.Id);
 
             var baseQuery = _userPermissions.AsQueryable()
-                .Where(u => u.UserId != superAdminGuid && 
+                .Where(u => u.UserId != superAdminGuid &&
                              u.UserId != _currentUser.UserGuid);
 
             var userPermissions = await baseQuery
@@ -276,7 +276,6 @@ namespace Permission.Api.Services
                                      .ToList()
             };
         }
-
 
         /// <summary>
         /// user-in permissionu olub olmamasinin yoxlanilmasi 

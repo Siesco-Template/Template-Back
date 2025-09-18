@@ -10,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using SharedLibrary.Dtos.PermissionDtos;
 using SharedLibrary.Exceptions.Common;
 using SharedLibrary.HelperServices.Permission;
+using System.Reflection;
 using System.Text;
 
 namespace SharedLibrary.ServiceRegistration
@@ -61,9 +62,17 @@ namespace SharedLibrary.ServiceRegistration
                 handlerApp.Run(async context =>
                 {
                     var feature = context.Features.Get<IExceptionHandlerFeature>();
+                    var error = feature?.Error;
+
+                    // unwrap TargetInvocationException
+                    if (error is TargetInvocationException tie && tie.InnerException != null)
+                    {
+                        error = tie.InnerException;
+                    }
+
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-                    if (feature?.Error is IBaseException ex)
+                    if (error is IBaseException ex)
                     {
                         context.Response.StatusCode = ex.StatusCode;
                         await context.Response.WriteAsJsonAsync(new
