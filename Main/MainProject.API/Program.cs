@@ -75,6 +75,9 @@ namespace MainProject.API
             builder.Services.AddScoped<IFolderService<ReportFile>>(sp =>
                 new FolderService<ReportFile>(sp.GetRequiredService<IFolderMongoContext>(), RootFolders.Reports));
 
+            builder.Services.AddScoped<IFolderService<OrganizationFile>>(sp =>
+                new FolderService<OrganizationFile>(sp.GetRequiredService<IFolderMongoContext>(), RootFolders.Organizations));
+
             builder.Services.AddScoped<IFolderFileService<UserFile>>(sp =>
             {
                 var context = sp.GetRequiredService<IFolderMongoContext>();
@@ -87,6 +90,13 @@ namespace MainProject.API
                 var context = sp.GetRequiredService<IFolderMongoContext>();
                 var folderService = sp.GetRequiredService<IFolderService<ReportFile>>();
                 return new FolderFileService<ReportFile>(context, folderService, RootFolders.Reports);
+            });
+
+            builder.Services.AddScoped<IFolderFileService<OrganizationFile>>(sp =>
+            {
+                var context = sp.GetRequiredService<IFolderMongoContext>();
+                var folderService = sp.GetRequiredService<IFolderService<OrganizationFile>>();
+                return new FolderFileService<OrganizationFile>(context, folderService, RootFolders.Organizations);
             });
 
             // Bu s?tir Guid problemi üçün laz?md?r

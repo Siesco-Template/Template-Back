@@ -20,6 +20,7 @@ namespace MainProject.API.Business
             services.AddScoped<CurrentUser>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IUserFileService, UserFileService>();
+            services.AddScoped<OrganizationFileService>();
             services.AddScoped<DbContext, MainDbContext>();
             services.AddScoped<EntitySetProvider>();
             services.AddScoped<ReportService>();
