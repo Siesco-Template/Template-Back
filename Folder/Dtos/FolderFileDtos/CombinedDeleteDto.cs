@@ -4,7 +4,6 @@
     {
         public List<string>? FolderPaths { get; set; } = [];
         public string? FolderPathForFiles { get; set; } = null!;
-        public List<Guid>? FileIds { get; set; } = [];
+        public List<string>? FileIds { get; set; } = [];
     }
-
 }

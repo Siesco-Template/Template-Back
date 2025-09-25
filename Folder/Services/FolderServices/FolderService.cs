@@ -1,29 +1,24 @@
 ﻿using Folder.Abstractions;
 using Folder.Dtos.FolderDtos;
+using Folder.Dtos.FolderFileDtos;
 using Folder.Entities;
 using Folder.HelperServices;
 using Folder.Utilities;
 using MongoDB.Driver;
+using SharedLibrary.Exceptions;
 using System.Text.Json;
-using Template.Exceptions;
 
 namespace Folder.Services.FolderServices
 {
-    public class FolderService<TFile> : IFolderService<TFile> where TFile : BaseFile
+    public class FolderService(IFolderMongoContext context) : IFolderService
     {
-        private readonly IMongoCollection<FolderEntity<TFile>> _collection;
-        private readonly string _rootPath;
-
-        public FolderService(IFolderMongoContext context, string rootPath)
+        private readonly IMongoCollection<FolderEntity> _collection = context.GetCollection<FolderEntity>("Folders");
+        private readonly string _rootPath = "/";
+        public async Task<FolderEntity?> GetFolderByPathAsync(string path)
         {
-            var collectionName = typeof(TFile).Name.ToLowerInvariant() + "Folder";
-            _collection = context.GetCollection<TFile>(collectionName);
-            _rootPath = rootPath;
-        }
+            path = NormalizePath(path);
 
-        public async Task<FolderEntity<TFile>?> GetFolderByPathAsync(string path)
-        {
-            if (path.TrimEnd('/') == _rootPath)
+            if (path == _rootPath)
                 return await GetRootFolderAsync();
 
             var rootFolder = await GetRootFolderAsync();
@@ -35,12 +30,14 @@ namespace Folder.Services.FolderServices
             var exists = await _collection.Find(f => f.Path == _rootPath).AnyAsync();
             if (!exists)
             {
-                var root = new FolderEntity<TFile>
+                var root = new FolderEntity
                 {
                     Name = _rootPath.Trim('/'),
                     Path = _rootPath,
                     Children = [],
-                    Files = []
+                    Files = [],
+                    CreateDate = DateTime.UtcNow,
+                    UpdateDate = DateTime.UtcNow
                 };
                 await _collection.InsertOneAsync(root);
             }
@@ -48,27 +45,27 @@ namespace Folder.Services.FolderServices
 
         public async Task<FolderDto> CreateFolderAsync(string name, string parentPath, string? icon)
         {
+            parentPath = NormalizePath(parentPath);
+
             if (string.IsNullOrWhiteSpace(name))
                 throw new BadRequestException("Qovluq adı boş ola bilməz.");
 
-            if (name.Contains("/"))
+            if (name.Contains('/'))
                 throw new BadRequestException("Qovluq adında '/' simvolu istifadə edilə bilməz.");
 
             await InitializeRootFolder();
             var root = await GetRootFolderAsync();
-            var parent = FolderTreeHelper.FindFolderRecursive(root, parentPath)
-                         ?? throw new NotFoundException($"Qovluq tapılmadı.");
+            var parent = FolderTreeHelper.FindFolderRecursive(root, parentPath) ?? throw new NotFoundException($"Qovluq tapılmadı.");
 
-            // eyni adli folder varsa xeta atsin 
             if (parent.Children.Any(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
                 throw new BadRequestException($"'{name}' adlı qovluq artıq mövcuddur.");
 
-            var newFolder = new FolderEntity<TFile>
+            var newFolder = new FolderEntity
             {
                 Name = name,
                 Path = parentPath.TrimEnd('/') + "/" + name,
-                Children = new(),
-                Files = new(),
+                Children = [],
+                Files = [],
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
                 Icon = icon
@@ -95,6 +92,8 @@ namespace Folder.Services.FolderServices
 
             if (newName.Contains("/"))
                 throw new BadRequestException("Qovluq adında '/' simvolu istifadə edilə bilməz.");
+
+            currentPath = NormalizePath(currentPath);
 
             var root = await GetRootFolderAsync();
             var folder = FolderTreeHelper.FindFolderRecursive(root, currentPath)
@@ -125,7 +124,7 @@ namespace Folder.Services.FolderServices
             var set = new HashSet<string>(paths);
             RemoveFoldersRecursive(root, set);
 
-            if (paths.Any())
+            if (paths.Count != 0)
             {
                 var parentPath = paths.First()[..paths.First().LastIndexOf('/')];
                 FolderTreeHelper.UpdateParentDates(root, parentPath);
@@ -214,7 +213,7 @@ namespace Folder.Services.FolderServices
             var fileConflicts = new List<string>();
 
             var existingFolderNames = targetFolder.Children.Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var existingFileNames = targetFolder.Files?.Select(f => f.FileName).ToHashSet(StringComparer.OrdinalIgnoreCase)
+            var existingFileNames = targetFolder.Files?.Select(f => f.Name).ToHashSet(StringComparer.OrdinalIgnoreCase)
                                   ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (dto.FoldersToCopy != null)
@@ -232,8 +231,8 @@ namespace Folder.Services.FolderServices
                 {
                     var sourceFolder = FolderTreeHelper.FindFolderRecursive(rootFolder, fileItem.SourcePath);
                     var file = sourceFolder?.Files.FirstOrDefault(f => f.Id == fileItem.FileId);
-                    if (file != null && existingFileNames.Contains(file.FileName))
-                        fileConflicts.Add(file.FileName);
+                    if (file != null && existingFileNames.Contains(file.Name))
+                        fileConflicts.Add(file.Name);
                 }
             }
 
@@ -279,7 +278,7 @@ namespace Folder.Services.FolderServices
                     var fileToCopy = sourceFolder.Files.FirstOrDefault(f => f.Id == fileItem.FileId)
                                      ?? throw new NotFoundException("Qovluq tapılmadı.");
 
-                    var cloned = JsonSerializer.Deserialize<TFile>(JsonSerializer.Serialize(fileToCopy))!;
+                    var cloned = JsonSerializer.Deserialize<BaseFile>(JsonSerializer.Serialize(fileToCopy))!;
 
                     if (cloned is BaseFile baseFile)
                     {
@@ -288,7 +287,7 @@ namespace Folder.Services.FolderServices
                         baseFile.Code = FileCodeGenerator.GenerateNextCode(existingCodes, prefix, numberLength);
                     }
 
-                    targetFolder.Files ??= new List<TFile>();
+                    targetFolder.Files ??= new List<BaseFile>();
                     targetFolder.Files.Add(cloned);
                 }
             }
@@ -343,7 +342,7 @@ namespace Folder.Services.FolderServices
             var fileConflicts = new List<string>();
 
             var existingFolderNames = targetFolder.Children.Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var existingFileNames = targetFolder.Files?.Select(f => f.FileName).ToHashSet(StringComparer.OrdinalIgnoreCase)
+            var existingFileNames = targetFolder.Files?.Select(f => f.Name).ToHashSet(StringComparer.OrdinalIgnoreCase)
                                   ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (dto.FoldersToCopy != null)
@@ -361,8 +360,8 @@ namespace Folder.Services.FolderServices
                 {
                     var sourceFolder = FolderTreeHelper.FindFolderRecursive(rootFolder, fileItem.SourcePath);
                     var file = sourceFolder?.Files.FirstOrDefault(f => f.Id == fileItem.FileId);
-                    if (file != null && existingFileNames.Contains(file.FileName))
-                        fileConflicts.Add(file.FileName);
+                    if (file != null && existingFileNames.Contains(file.Name))
+                        fileConflicts.Add(file.Name);
                 }
             }
 
@@ -408,7 +407,7 @@ namespace Folder.Services.FolderServices
 
                     sourceFolder.Files.Remove(fileToMove);
 
-                    targetFolder.Files ??= new List<TFile>();
+                    targetFolder.Files ??= new List<BaseFile>();
                     targetFolder.Files.Add(fileToMove);
                 }
             }
@@ -453,8 +452,24 @@ namespace Folder.Services.FolderServices
             await SaveRootAsync(root);
         }
 
+        public async Task<FoldersAndFilesDto> SearchInFolderAsync(string path, string keyword)
+        {
+            var rootFolder = await GetFolderByPathAsync(path) ?? throw new NotFoundException("Qovluq tapılmadı.");
+            var normalizedKeyword = Normalize(keyword);
 
-        private async Task RegenerateCodesRecursiveAsync(FolderEntity<TFile> rootFolder, FolderEntity<TFile> folderToProcess)
+            var matchingFolders = new List<FolderDto>();
+            var matchingFiles = new List<FileDto>();
+
+            searchRecursive(rootFolder, normalizedKeyword, matchingFolders, matchingFiles);
+
+            return new FoldersAndFilesDto
+            {
+                Folders = matchingFolders,
+                Files = matchingFiles
+            };
+        }
+
+        private async Task RegenerateCodesRecursiveAsync(FolderEntity rootFolder, FolderEntity folderToProcess)
         {
             foreach (var file in folderToProcess.Files.OfType<BaseFile>())
             {
@@ -469,8 +484,7 @@ namespace Folder.Services.FolderServices
             }
         }
 
-
-        private void UpdateChildPaths(List<FolderEntity<TFile>> children, string oldBasePath, string newBasePath)
+        private void UpdateChildPaths(List<FolderEntity> children, string oldBasePath, string newBasePath)
         {
             foreach (var child in children)
             {
@@ -479,7 +493,7 @@ namespace Folder.Services.FolderServices
             }
         }
 
-        private void RemoveFoldersRecursive(FolderEntity<TFile> folder, HashSet<string> pathsToDelete)
+        private void RemoveFoldersRecursive(FolderEntity folder, HashSet<string> pathsToDelete)
         {
             folder.Children.RemoveAll(c => pathsToDelete.Contains(c.Path));
             foreach (var child in folder.Children)
@@ -488,16 +502,87 @@ namespace Folder.Services.FolderServices
             folder.UpdateDate = DateTime.UtcNow;
         }
 
-        private async Task<FolderEntity<TFile>> GetRootFolderAsync()
+        private async Task<FolderEntity> GetRootFolderAsync()
         {
             return await _collection.Find(f => f.Path == _rootPath).FirstOrDefaultAsync()
                    ?? throw new NotFoundException("Əsas qovluq tapılmadı.");
         }
 
-        private async Task SaveRootAsync(FolderEntity<TFile> rootFolder)
+        private async Task SaveRootAsync(FolderEntity rootFolder)
         {
-            var filter = Builders<FolderEntity<TFile>>.Filter.Eq(f => f.Path, _rootPath);
+            var filter = Builders<FolderEntity>.Filter.Eq(f => f.Path, _rootPath);
             await _collection.ReplaceOneAsync(filter, rootFolder);
+        }
+
+        private string Normalize(string input)
+        {
+            return input?.ToLowerInvariant()
+                       .Replace(" ", "")
+                       .Replace("ə", "e")
+                       .Replace("ı", "i")
+                       .Replace("ç", "c")
+                       .Replace("ş", "s")
+                       .Replace("ö", "o")
+                       .Replace("ü", "u")
+                       .Replace("ğ", "g")
+                   ?? string.Empty;
+        }
+
+        private string NormalizePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                throw new BadRequestException("Path boş ola bilməz.");
+
+            if (path == "/")
+                throw new BadRequestException("Əsas qovluq (/) üzərində əməliyyat etmək icazəli deyil.");
+
+            // Root həmişə "/"
+            if (path == "/")
+                return "/";
+
+            // əgər / ilə başlamırsa əlavə et
+            if (!path.StartsWith("/"))
+                path = "/" + path;
+
+            // sondakı / işarəsini sil (root istisna olmaqla)
+            path = path.TrimEnd('/');
+
+            return path;
+        }
+
+        private void searchRecursive(FolderEntity folder, string normalizedKeyword,
+            List<FolderDto> matchingFolders,
+            List<FileDto> matchingFiles)
+        {
+            if (!string.IsNullOrEmpty(folder.Name) && Normalize(folder.Name).Contains(normalizedKeyword))
+            {
+                matchingFolders.Add(new FolderDto
+                {
+                    Name = folder.Name,
+                    Path = folder.Path,
+                    Icon = folder.Icon,
+                    CreateDate = folder.CreateDate
+                });
+            }
+
+            foreach (var file in folder.Files)
+            {
+                if (Normalize(file.Name).Contains(normalizedKeyword))
+                {
+                    matchingFiles.Add(new FileDto
+                    {
+                        Id = file.Id,
+                        FileName = file.Name,
+                        CreateDate = file.CreateDate,
+                        FolderPath = folder.Path
+                    });
+                }
+            }
+
+            foreach (var child in folder.Children)
+            {
+                searchRecursive(child, normalizedKeyword, matchingFolders, matchingFiles);
+            }
         }
     }
 }

@@ -2,14 +2,15 @@
 
 namespace Folder.Services.FolderFileServices
 {
-    public interface IFolderFileService<TFile> where TFile : BaseFile
+    public interface IFolderFileService
     {
-        Task AddFileToFolderAsync(string folderPath, TFile file);
-        Task AddFilesToFolderAsync(string folderPath, List<TFile> file);
-        Task RenameFileAsync(string folderPath, Guid fileId, string newFileName);
-        Task DeleteFilesAsync(string folderPath, Func<TFile, bool> predicate);
-        Task CopyFilesAsync(string sourceFolderPath, string targetFolderPath, Func<TFile, bool> predicate);
-        Task MoveFilesAsync(string sourceFolderPath, string targetFolderPath, Func<TFile, bool> predicate);
+        Task AddFileToFolderAsync(string folderPath, BaseFile file);
+        Task AddFilesToFolderAsync(string folderPath, List<BaseFile> files);
+        Task RenameFileAsync(string folderPath, string sqlId, string newName);
+        Task DeleteFilesAsync(string folderPath, Func<BaseFile, bool> predicate);
+        Task CopyFilesAsync(string sourceFolderPath, string targetFolderPath, Func<BaseFile, bool> predicate);
+        Task MoveFilesAsync(string sourceFolderPath, string targetFolderPath, Func<BaseFile, bool> predicate);
         Task<string> GenerateNextFileCodeAsync(string folderPath, string prefix, int numberLength);
+        Task<BaseFile> CreateFileAsync(string folderPath, Guid sqlId, string name, string code);
     }
 }

@@ -5,6 +5,6 @@ namespace Folder.Abstractions
 {
     public interface IFolderMongoContext
     {
-        IMongoCollection<FolderEntity<TFile>> GetCollection<TFile>(string collectionName);
+        IMongoCollection<FolderEntity> GetCollection<TFile>(string collectionName);
     }
 }

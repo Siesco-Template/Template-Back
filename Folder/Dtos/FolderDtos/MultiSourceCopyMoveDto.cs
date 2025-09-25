@@ -20,6 +20,6 @@
     public class FileCopyItem
     {
         public string SourcePath { get; set; } = null!;
-        public Guid FileId { get; set; }
+        public string FileId { get; set; }
     }
 }

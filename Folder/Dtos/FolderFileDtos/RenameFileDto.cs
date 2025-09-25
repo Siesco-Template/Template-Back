@@ -3,7 +3,7 @@
     public class RenameFileDto
     {
         public string FolderPath { get; set; } = default!;
-        public Guid FileId { get; set; }
+        public string FileId { get; set; }
         public string NewFileName { get; set; } = default!;
     }
 

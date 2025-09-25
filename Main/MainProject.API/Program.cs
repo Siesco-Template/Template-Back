@@ -1,13 +1,11 @@
 ﻿using ConfigComponent.Services;
 using FilterComponent.Services;
 using Folder.Abstractions;
-using Folder.Roots;
 using Folder.Services.FolderFileServices;
 using Folder.Services.FolderServices;
 using ImportExportComponent.BackgroundServices;
 using ImportExportComponent.Dtos;
 using MainProject.API.Business;
-using MainProject.API.Business.Dtos.FolderFiles;
 using MainProject.API.DAL.Contexts;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
@@ -69,34 +67,14 @@ namespace MainProject.API
             builder.Services.AddSingleton<IFolderMongoContext, FolderMongoContext>();
 
             // user modeli folder strukturuna uygunlasdirmaq
-            builder.Services.AddScoped<IFolderService<UserFile>>(sp =>
-                new FolderService<UserFile>(sp.GetRequiredService<IFolderMongoContext>(), RootFolders.Users));
+            builder.Services.AddScoped<IFolderService>(sp =>
+                new FolderService(sp.GetRequiredService<IFolderMongoContext>()));
 
-            builder.Services.AddScoped<IFolderService<ReportFile>>(sp =>
-                new FolderService<ReportFile>(sp.GetRequiredService<IFolderMongoContext>(), RootFolders.Reports));
-
-            builder.Services.AddScoped<IFolderService<OrganizationFile>>(sp =>
-                new FolderService<OrganizationFile>(sp.GetRequiredService<IFolderMongoContext>(), RootFolders.Organizations));
-
-            builder.Services.AddScoped<IFolderFileService<UserFile>>(sp =>
+            builder.Services.AddScoped<IFolderFileService>(sp =>
             {
                 var context = sp.GetRequiredService<IFolderMongoContext>();
-                var folderService = sp.GetRequiredService<IFolderService<UserFile>>();
-                return new FolderFileService<UserFile>(context, folderService, RootFolders.Users);
-            });
-
-            builder.Services.AddScoped<IFolderFileService<ReportFile>>(sp =>
-            {
-                var context = sp.GetRequiredService<IFolderMongoContext>();
-                var folderService = sp.GetRequiredService<IFolderService<ReportFile>>();
-                return new FolderFileService<ReportFile>(context, folderService, RootFolders.Reports);
-            });
-
-            builder.Services.AddScoped<IFolderFileService<OrganizationFile>>(sp =>
-            {
-                var context = sp.GetRequiredService<IFolderMongoContext>();
-                var folderService = sp.GetRequiredService<IFolderService<OrganizationFile>>();
-                return new FolderFileService<OrganizationFile>(context, folderService, RootFolders.Organizations);
+                var folderService = sp.GetRequiredService<IFolderService>();
+                return new FolderFileService(context, folderService);
             });
 
             // Bu s?tir Guid problemi üçün laz?md?r

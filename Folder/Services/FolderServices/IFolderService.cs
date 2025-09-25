@@ -1,11 +1,12 @@
 ﻿using Folder.Dtos.FolderDtos;
+using Folder.Dtos.FolderFileDtos;
 using Folder.Entities;
 
 namespace Folder.Services.FolderServices
 {
-    public interface IFolderService<TFile> where TFile : BaseFile
+    public interface IFolderService
     {
-        Task<FolderEntity<TFile>?> GetFolderByPathAsync(string path);
+        Task<FolderEntity?> GetFolderByPathAsync(string path);
         Task InitializeRootFolder();
         Task<FolderDto> CreateFolderAsync(string name, string parentPath, string? icon);
 
@@ -24,5 +25,6 @@ namespace Folder.Services.FolderServices
 
         Task AddCommentAsync(string path, string comment);
         Task ChangeIconAsync(string path, string icon);
+        Task<FoldersAndFilesDto> SearchInFolderAsync(string path, string keyword);
     }
 }

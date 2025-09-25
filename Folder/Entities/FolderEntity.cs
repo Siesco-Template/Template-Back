@@ -3,10 +3,10 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Folder.Entities
 {
-    public class FolderEntity<TFile>
+    public class FolderEntity
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)] 
+        [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
         [BsonElement("name")]
@@ -20,7 +20,7 @@ namespace Folder.Entities
 
         [BsonElement("path")]
         public string Path { get; set; }
-        
+
         [BsonElement("createDate")]
         public DateTime CreateDate { get; set; }
 
@@ -28,9 +28,9 @@ namespace Folder.Entities
         public DateTime UpdateDate { get; set; }
 
         [BsonElement("children")]
-        public List<FolderEntity<TFile>> Children { get; set; } = [];
+        public List<FolderEntity> Children { get; set; } = new();
 
         [BsonElement("files")]
-        public List<TFile> Files { get; set; } = [];
+        public List<BaseFile> Files { get; set; } = new();
     }
 }

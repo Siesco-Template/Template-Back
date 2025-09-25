@@ -2,7 +2,7 @@
 {
     public class FileDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string FileName { get; set; }
         public DateTime? CreateDate { get; set; }
 

@@ -1,13 +1,17 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Folder.Entities
 {
-    public abstract class BaseFile
+    public class BaseFile
     {
-        public Guid Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
+        public string SqlId { get; set; }
 
-        [BsonElement("fileName")]
-        public string FileName { get; set; }
+        [BsonElement("name")]
+        public string Name { get; set; }
 
         [BsonElement("code")]
         public string Code { get; set; }

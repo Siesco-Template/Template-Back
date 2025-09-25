@@ -1,9 +1,5 @@
 ﻿using Folder.Dtos.FolderDtos;
 using Folder.Dtos.FolderFileDtos;
-using Folder.Services.FolderFileServices;
-using Folder.Services.FolderServices;
-using MainProject.API.Business.Dtos.FolderFiles;
-using MainProject.API.Business.Dtos.UserFileDtos;
 using MainProject.API.Business.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,99 +7,8 @@ namespace MainProject.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserFilesController(IUserFileService _userFileService,
-                                     IFolderService<UserFile> _folderService,
-                                     IFolderFileService<UserFile> _folderFileService) : ControllerBase
+    public class UserFilesController(IUserFileService _userFileService) : ControllerBase
     {
-        [HttpPost("[action]")]
-        public async Task<IActionResult> SyncUsersToFolder()
-        {
-            await _userFileService.SyncAllUsersToFolderAsync();
-            return Ok();
-        }
-
-        [HttpPost("[action]")]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserFileDto dto)
-        {
-            return Ok(await _userFileService.CreateAsync(dto));
-        }
-
-        [HttpPost("[action]")]
-        public async Task<IActionResult> RenameFile([FromBody] RenameFileDto dto)
-        {
-            await _folderFileService.RenameFileAsync(dto.FolderPath, dto.FileId, dto.NewFileName);
-            return Ok();
-        }
-
-
-        /// <summary>
-        /// Folder ve file-lari tek bir source-den kopyalamaq
-        /// </summary>
-        [HttpPost("[action]")]
-        public async Task<IActionResult> CopyFoldersAndFiles([FromBody] CombinedMoveDto dto)
-        {
-            if (dto.FolderNames != null && dto.FolderNames.Any())
-            {
-                await _folderService.BulkCopyFoldersAsync(dto.SourcePath, dto.TargetPath, dto.FolderNames);
-            }
-
-            if (dto.FileIds != null && dto.FileIds.Any())
-            {
-                await _folderFileService.CopyFilesAsync(
-                dto.SourcePath,
-                dto.TargetPath,
-                file => dto.FileIds.Contains(file.Id)
-              );
-            }
-
-            return Ok();
-        }
-
-        /// <summary>
-        /// Folder ve file-lari ferqli source-lerden kopyalamaq (Search sonrasi)
-        /// </summary>
-        [HttpPost("[action]")]
-        public async Task<IActionResult> CopyFromMultipleSources([FromBody] MultiSourceCopyMoveDto dto)
-        {
-            await _folderService.CopyFromMultipleSourcesAsync(dto);
-            return Ok();
-        }
-
-
-        /// <summary>
-        /// Folder ve file-lari tek bir source-den kocurmek
-        /// </summary>
-        [HttpPost("[action]")]
-        public async Task<IActionResult> MoveFoldersAndFiles([FromBody] CombinedMoveDto dto)
-        {
-            if (dto.FolderNames != null && dto.FolderNames.Any())
-            {
-                await _folderService.BulkMoveFoldersAsync(dto.SourcePath, dto.TargetPath, dto.FolderNames);
-            }
-
-            if (dto.FileIds != null && dto.FileIds.Any())
-            {
-                await _folderFileService.MoveFilesAsync(
-                dto.SourcePath,
-                dto.TargetPath,
-                file => dto.FileIds.Contains(file.Id)
-               );
-            }
-            return Ok();
-        }
-
-        /// <summary>
-        /// Folder ve file-lari ferqli source-lerden kocurmek (Search sonrasi)
-        /// </summary>
-        [HttpPost("[action]")]
-        public async Task<IActionResult> MoveFromMultipleSources([FromBody] MultiSourceCopyMoveDto dto)
-        {
-            await _folderService.MoveFromMultipleSourcesAsync(dto);
-            return Ok();
-        }
-
-
-
         /// <summary>
         /// Folder ve file-lari tek bir source-den silmek
         /// </summary>
@@ -113,7 +18,7 @@ namespace MainProject.API.Controllers
             if (dto.FolderPaths != null && dto.FolderPaths.Any())
             {
                 await _userFileService.DeleteUsersFromFoldersAsync(dto.FolderPaths); // sql
-                await _folderService.BulkDeleteFoldersAsync(dto.FolderPaths); // mongo
+                //await _folderService.BulkDeleteFoldersAsync(dto.FolderPaths); // mongo
             }
 
             if (dto.FileIds != null && dto.FileIds.Any())

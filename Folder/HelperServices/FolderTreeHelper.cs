@@ -4,7 +4,7 @@ namespace Folder.HelperServices
 {
     public static class FolderTreeHelper
     {
-        public static FolderEntity<TFile>? FindFolderRecursive<TFile>(FolderEntity<TFile> currentFolder, string path) where TFile : BaseFile
+        public static FolderEntity? FindFolderRecursive(FolderEntity currentFolder, string path)
         {
             if (currentFolder.Path == path)
                 return currentFolder;
@@ -18,7 +18,7 @@ namespace Folder.HelperServices
             return null;
         }
 
-        public static void UpdateParentDates<TFile>(FolderEntity<TFile> rootFolder, string path) where TFile : BaseFile
+        public static void UpdateParentDates(FolderEntity rootFolder, string path)
         {
             if (string.IsNullOrWhiteSpace(path))
                 return;
@@ -38,9 +38,9 @@ namespace Folder.HelperServices
             rootFolder.UpdateDate = DateTime.UtcNow;
         }
 
-        public static FolderEntity<TFile> DeepCloneWithNewPath<TFile>(FolderEntity<TFile> source, string oldBasePath, string newBasePath) where TFile : BaseFile
+        public static FolderEntity DeepCloneWithNewPath(FolderEntity source, string oldBasePath, string newBasePath)
         {
-            var clone = new FolderEntity<TFile>
+            var clone = new FolderEntity
             {
                 Name = source.Name,
                 Path = source.Path.Replace(oldBasePath, newBasePath),
@@ -60,11 +60,11 @@ namespace Folder.HelperServices
             return clone;
         }
 
-        public static List<string> GetAllCodesWithPrefix<TFile>(FolderEntity<TFile> folder, string prefix) where TFile : BaseFile
+        public static List<string> GetAllCodesWithPrefix(FolderEntity folder, string prefix)
         {
             var result = new List<string>();
 
-            void collect(FolderEntity<TFile> current)
+            void collect(FolderEntity current)
             {
                 if (current.Files != null)
                 {

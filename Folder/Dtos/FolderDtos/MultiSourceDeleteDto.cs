@@ -2,13 +2,13 @@
 {
     public class MultiSourceDeleteDto
     {
-        public List<string>? FolderPathsToDelete { get; set; } = new();
-        public List<FileDeleteItem>? FilesToDelete { get; set; } = new();
+        public List<string>? FolderPathsToDelete { get; set; } = [];
+        public List<FileDeleteItem>? FilesToDelete { get; set; } = [];
     }
 
     public class FileDeleteItem
     {
         public string FolderPath { get; set; } = null!;
-        public Guid FileId { get; set; }
+        public string FileId { get; set; }
     }
 }

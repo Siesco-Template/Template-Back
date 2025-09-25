@@ -16,9 +16,9 @@ namespace MainProject.API.DAL.Contexts
             _database = client.GetDatabase(settings.Value.DatabaseName);
         }
 
-        public IMongoCollection<FolderEntity<T>> GetCollection<T>(string collectionName)
+        public IMongoCollection<FolderEntity> GetCollection<T>(string collectionName)
         {
-            return _database.GetCollection<FolderEntity<T>>(collectionName);
+            return _database.GetCollection<FolderEntity>(collectionName);
         }
     }
 }
