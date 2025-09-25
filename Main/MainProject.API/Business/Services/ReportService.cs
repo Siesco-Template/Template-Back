@@ -1,4 +1,6 @@
-﻿using MainProject.API.Business.Dtos.ReportDtos;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Folder.Services.FolderFileServices;
+using MainProject.API.Business.Dtos.ReportDtos;
 using MainProject.API.DAL.Contexts;
 using MainProject.API.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +9,7 @@ using SharedLibrary.Exceptions;
 
 namespace MainProject.API.Business.Services
 {
-    public class ReportService(MainDbContext _context)
+    public class ReportService(MainDbContext _context, IFolderFileService _folderFileService)
     {
         public async Task CreateReportAsync(CreateReportDto dto)
         {
@@ -26,7 +28,8 @@ namespace MainProject.API.Business.Services
                 ReportStatus = ReportStatus.Compiled,
                 ClassificationCode1 = dto.ClassificationCode1,
                 ClassificationCode2 = dto.ClassificationCode2,
-                FuntionalClassificationCode = dto.FuntionalClassificationCode
+                FuntionalClassificationCode = dto.FuntionalClassificationCode,
+                ReportDetails = []
             };
             await _context.Reports.AddAsync(report);
 
@@ -41,6 +44,13 @@ namespace MainProject.API.Business.Services
             }));
 
             await _context.SaveChangesAsync();
+
+            await _folderFileService.CreateFileAsync(
+
+                   folderPath: "/Reports",
+                   sqlId: report.Id,
+                   name: $"{report.Number}"
+            );
         }
 
         public async Task<ReportDto> GetReportByIdAsync(Guid reportId)

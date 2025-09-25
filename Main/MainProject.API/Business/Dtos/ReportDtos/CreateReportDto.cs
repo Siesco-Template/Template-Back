@@ -16,7 +16,7 @@ namespace MainProject.API.Business.Dtos.ReportDtos
 
         public Guid OrganizationId { get; set; }
 
-        public ICollection<CreateReportDetail> ReportDetails { get; set; }
+        public ICollection<CreateReportDetail> ReportDetails { get; set; } = [];
     }
 
     public class CreateReportDetail

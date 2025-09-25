@@ -12,6 +12,14 @@ namespace MainProject.API.Controllers
     [ApiController]
     public class ReportController(ReportService _reportService, GetQueryHelper _getQueryHelper) : ControllerBase
     {
+        [Permission(PageKeys.Report, ActionKeys.Create)]
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CreateReport([FromBody] CreateReportDto createReportDto)
+        {
+            await _reportService.CreateReportAsync(createReportDto);
+            return Ok();
+        }
+
         [Permission(PageKeys.Report, ActionKeys.GetById)]
         [HttpGet("[action]")]
         public async Task<ReportDto> GetReportById(Guid reportId) => await _reportService.GetReportByIdAsync(reportId);
