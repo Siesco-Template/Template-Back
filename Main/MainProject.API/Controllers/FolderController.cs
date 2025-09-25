@@ -82,7 +82,8 @@ namespace MainProject.API.Controllers
                     {
                         Id = f.Id,
                         FileName = f.Name,
-                        CreateDate = f.CreateDate
+                        CreateDate = f.CreateDate,
+                        FolderPath = folder.Path
                     }).ToList()
             });
         }
