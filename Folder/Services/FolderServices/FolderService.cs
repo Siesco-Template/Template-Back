@@ -1,19 +1,25 @@
-﻿using Folder.Abstractions;
-using Folder.Dtos.FolderDtos;
+﻿using Folder.Dtos.FolderDtos;
 using Folder.Dtos.FolderFileDtos;
 using Folder.Entities;
 using Folder.HelperServices;
-using Folder.Utilities;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using SharedLibrary.Exceptions;
+using SharedLibrary.HelperServices;
 using System.Text.Json;
 
 namespace Folder.Services.FolderServices
 {
-    public class FolderService(IFolderMongoContext context) : IFolderService
+    public class FolderService : IFolderService
     {
-        private readonly IMongoCollection<FolderEntity> _collection = context.GetCollection<FolderEntity>("Folders");
+        private readonly IMongoCollection<FolderEntity> _collection;
         private readonly string _rootPath = "/";
+        public FolderService(MongoDbService mongoDbService)
+        {
+            var database = mongoDbService.GetDatabase();
+            _collection = database.GetCollection<FolderEntity>("Folders");
+        }
+
         public async Task<FolderEntity?> GetFolderByPathAsync(string path)
         {
             path = NormalizePath(path);
@@ -62,6 +68,7 @@ namespace Folder.Services.FolderServices
 
             var newFolder = new FolderEntity
             {
+                Id = ObjectId.GenerateNewId().ToString(),
                 Name = name,
                 Path = parentPath.TrimEnd('/') + "/" + name,
                 Children = [],
@@ -73,7 +80,7 @@ namespace Folder.Services.FolderServices
 
             parent.Children.Add(newFolder);
 
-            FolderTreeHelper.UpdateParentDates(root, parentPath);
+            if (parentPath != "/") FolderTreeHelper.UpdateParentDates(root, parentPath);
             await SaveRootAsync(root);
 
             return new FolderDto
@@ -191,8 +198,6 @@ namespace Folder.Services.FolderServices
             {
                 var copiedFolder = FolderTreeHelper.DeepCloneWithNewPath(folder, sourceParentPath + "/" + folder.Name, targetParentPath + "/" + folder.Name);
 
-                await RegenerateCodesRecursiveAsync(rootFolder, copiedFolder);
-
                 targetParentFolder.Children.Add(copiedFolder);
             }
 
@@ -236,12 +241,12 @@ namespace Folder.Services.FolderServices
                 }
             }
 
-            if (folderConflicts.Any() || fileConflicts.Any())
+            if (folderConflicts.Count != 0 || fileConflicts.Count != 0)
             {
                 var errorMsg = "Ad uyğunluğu səbəbilə köçürmə ləğv edildi:\n";
-                if (folderConflicts.Any())
+                if (folderConflicts.Count != 0)
                     errorMsg += $"Qovluqlar: {string.Join(", ", folderConflicts)}\n";
-                if (fileConflicts.Any())
+                if (fileConflicts.Count != 0)
                     errorMsg += $"Fayllar: {string.Join(", ", fileConflicts)}";
 
                 throw new BadRequestException(errorMsg);
@@ -262,8 +267,6 @@ namespace Folder.Services.FolderServices
                         folderItem.SourcePath + "/" + folderItem.FolderName,
                         dto.TargetPath + "/" + folderItem.FolderName);
 
-                    await RegenerateCodesRecursiveAsync(rootFolder, copied);
-
                     targetFolder.Children.Add(copied);
                 }
             }
@@ -280,14 +283,7 @@ namespace Folder.Services.FolderServices
 
                     var cloned = JsonSerializer.Deserialize<BaseFile>(JsonSerializer.Serialize(fileToCopy))!;
 
-                    if (cloned is BaseFile baseFile)
-                    {
-                        var (prefix, numberLength) = CodeParsingHelper.ExtractPrefixAndLength(baseFile.Code);
-                        var existingCodes = FolderTreeHelper.GetAllCodesWithPrefix(rootFolder, prefix);
-                        baseFile.Code = FileCodeGenerator.GenerateNextCode(existingCodes, prefix, numberLength);
-                    }
-
-                    targetFolder.Files ??= new List<BaseFile>();
+                    targetFolder.Files ??= [];
                     targetFolder.Files.Add(cloned);
                 }
             }
@@ -469,26 +465,11 @@ namespace Folder.Services.FolderServices
             };
         }
 
-        private async Task RegenerateCodesRecursiveAsync(FolderEntity rootFolder, FolderEntity folderToProcess)
-        {
-            foreach (var file in folderToProcess.Files.OfType<BaseFile>())
-            {
-                var (prefix, numberLength) = CodeParsingHelper.ExtractPrefixAndLength(file.Code);
-                var existingCodes = FolderTreeHelper.GetAllCodesWithPrefix(rootFolder, prefix);
-                file.Code = FileCodeGenerator.GenerateNextCode(existingCodes, prefix, numberLength);
-            }
-
-            foreach (var child in folderToProcess.Children)
-            {
-                await RegenerateCodesRecursiveAsync(rootFolder, child);
-            }
-        }
-
         private void UpdateChildPaths(List<FolderEntity> children, string oldBasePath, string newBasePath)
         {
             foreach (var child in children)
             {
-                child.Path = child.Path.Replace(oldBasePath, newBasePath);
+                child.Path = newBasePath + child.Path.Substring(oldBasePath.Length);
                 UpdateChildPaths(child.Children, oldBasePath, newBasePath);
             }
         }
@@ -533,8 +514,8 @@ namespace Folder.Services.FolderServices
             if (string.IsNullOrWhiteSpace(path))
                 throw new BadRequestException("Path boş ola bilməz.");
 
-            if (path == "/")
-                throw new BadRequestException("Əsas qovluq (/) üzərində əməliyyat etmək icazəli deyil.");
+            //if (path == "/")
+            //    throw new BadRequestException("Əsas qovluq (/) üzərində əməliyyat etmək icazəli deyil.");
 
             // Root həmişə "/"
             if (path == "/")

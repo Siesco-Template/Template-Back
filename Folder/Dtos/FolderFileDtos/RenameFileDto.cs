@@ -6,5 +6,4 @@
         public string FileId { get; set; }
         public string NewFileName { get; set; } = default!;
     }
-
 }

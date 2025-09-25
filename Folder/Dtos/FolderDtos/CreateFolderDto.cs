@@ -6,5 +6,4 @@
         public string ParentPath { get; set; }
         public string? Icon { get; set; }
     }
-
 }

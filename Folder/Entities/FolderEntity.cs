@@ -28,9 +28,9 @@ namespace Folder.Entities
         public DateTime UpdateDate { get; set; }
 
         [BsonElement("children")]
-        public List<FolderEntity> Children { get; set; } = new();
+        public List<FolderEntity> Children { get; set; } = [];
 
         [BsonElement("files")]
-        public List<BaseFile> Files { get; set; } = new();
+        public List<BaseFile> Files { get; set; } = [];
     }
 }

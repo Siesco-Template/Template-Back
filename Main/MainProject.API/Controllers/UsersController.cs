@@ -30,10 +30,17 @@ namespace MainProject.API.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("[action]")]
         public async Task<IActionResult> Update(UpdateUserDto dto)
         {
             await _userService.UpdateAsync(dto);
+            return Ok();
+        }
+
+        [HttpDelete("[action]")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            await _userService.DeleteAsync(id);
             return Ok();
         }
     }

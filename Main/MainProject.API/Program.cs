@@ -1,20 +1,14 @@
 ﻿using ConfigComponent.Services;
 using FilterComponent.Services;
-using Folder.Abstractions;
-using Folder.Services.FolderFileServices;
-using Folder.Services.FolderServices;
+using Folder.Services;
 using ImportExportComponent.BackgroundServices;
 using ImportExportComponent.Dtos;
 using MainProject.API.Business;
 using MainProject.API.DAL.Contexts;
 using Microsoft.EntityFrameworkCore;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
 using SharedLibrary;
 using SharedLibrary.HelperServices;
 using SharedLibrary.ServiceRegistration;
-using SharedLibrary.Settings;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
@@ -50,12 +44,10 @@ namespace MainProject.API
                 c.CustomSchemaIds(t => t.FullName!.Replace("+", "."));
             });
 
-            builder.Services.Configure<MongoDbSettings>(
-            builder.Configuration.GetSection("FolderDb"));
-
             builder.RegisterFilterComponent("MongoDb");
             builder.RegisterConfigComponent("MongoDb");
             builder.RegisterDownloadItems("MongoDb");
+            builder.RegisterFolderComponent("MongoDb");
 
             builder.Services.AddSingleton(provider =>
             {
@@ -63,24 +55,6 @@ namespace MainProject.API
             });
 
             builder.Services.AddHostedService<ExportWorkerService>();
-
-            builder.Services.AddSingleton<IFolderMongoContext, FolderMongoContext>();
-
-            // user modeli folder strukturuna uygunlasdirmaq
-            builder.Services.AddScoped<IFolderService>(sp =>
-                new FolderService(sp.GetRequiredService<IFolderMongoContext>()));
-
-            builder.Services.AddScoped<IFolderFileService>(sp =>
-            {
-                var context = sp.GetRequiredService<IFolderMongoContext>();
-                var folderService = sp.GetRequiredService<IFolderService>();
-                return new FolderFileService(context, folderService);
-            });
-
-            // Bu s?tir Guid problemi üçün laz?md?r
-            BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
-
-            // ---------------- Folder inteqrasiya ----------------end
 
             builder.Services.AddSwagger();
 

@@ -20,7 +20,7 @@ namespace Folder.HelperServices
 
         public static void UpdateParentDates(FolderEntity rootFolder, string path)
         {
-            if (string.IsNullOrWhiteSpace(path))
+            if (string.IsNullOrWhiteSpace(path) || path == "/")
                 return;
 
             var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -58,30 +58,6 @@ namespace Folder.HelperServices
             }
 
             return clone;
-        }
-
-        public static List<string> GetAllCodesWithPrefix(FolderEntity folder, string prefix)
-        {
-            var result = new List<string>();
-
-            void collect(FolderEntity current)
-            {
-                if (current.Files != null)
-                {
-                    result.AddRange(current.Files
-                        .OfType<BaseFile>()
-                        .Where(f => f.Code.StartsWith(prefix))
-                        .Select(f => f.Code));
-                }
-
-                foreach (var child in current.Children)
-                {
-                    collect(child);
-                }
-            }
-
-            collect(folder);
-            return result;
         }
     }
 }

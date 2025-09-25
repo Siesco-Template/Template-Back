@@ -1,22 +1,25 @@
-﻿using Folder.Abstractions;
-using Folder.Entities;
+﻿using Folder.Entities;
 using Folder.HelperServices;
 using Folder.Services.FolderServices;
-using Folder.Utilities;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SharedLibrary.Exceptions;
+using SharedLibrary.HelperServices;
 using System.Text.Json;
 
 namespace Folder.Services.FolderFileServices
 {
-    public class FolderFileService(
-        IFolderMongoContext context,
-        IFolderService folderService) : IFolderFileService
+    public class FolderFileService : IFolderFileService
     {
-        private readonly IMongoCollection<FolderEntity> _collection = context.GetCollection<FolderEntity>("Folders");
-        private readonly IFolderService _folderService = folderService;
+        private readonly IMongoCollection<FolderEntity> _collection;
+        private readonly IFolderService _folderService;
         private readonly string _rootPath = "/";
+        public FolderFileService(MongoDbService mongoDbService, IFolderService folderService)
+        {
+            var database = mongoDbService.GetDatabase();
+            _collection = database.GetCollection<FolderEntity>("Folders");
+            _folderService = folderService;
+        }
 
         public async Task AddFileToFolderAsync(string folderPath, BaseFile file)
         {
@@ -87,6 +90,22 @@ namespace Folder.Services.FolderFileServices
             await SaveRootAsync(rootFolder);
         }
 
+        public async Task DeleteFileAsync(string folderPath, string fileId)
+        {
+            var rootFolder = await GetRootAsync();
+            var folder = FolderTreeHelper.FindFolderRecursive(rootFolder, folderPath)
+                         ?? throw new NotFoundException("Qovluq tapılmadı.");
+
+            var fileToRemove = folder.Files.FirstOrDefault(f => f.SqlId == fileId) ?? throw new NotFoundException("Fayl tapılmadı.");
+            folder.Files.Remove(fileToRemove);
+            folder.UpdateDate = DateTime.UtcNow;
+
+            if (folderPath != "/")
+                FolderTreeHelper.UpdateParentDates(rootFolder, folderPath);
+
+            await SaveRootAsync(rootFolder);
+        }
+
         public async Task CopyFilesAsync(string sourceFolderPath, string targetFolderPath, Func<BaseFile, bool> predicate)
         {
             var rootFolder = await GetRootAsync();
@@ -99,20 +118,20 @@ namespace Folder.Services.FolderFileServices
             if (!filesToCopy.Any())
                 throw new NotFoundException("Kopyalanacaq uyğun fayl tapılmadı.");
 
-            targetFolder.Files ??= new List<BaseFile>();
+            targetFolder.Files ??= [];
 
             var existingFileNames = targetFolder.Files.Select(f => f.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var conflictedFiles = filesToCopy.Where(f => existingFileNames.Contains(f.Name)).ToList();
-            if (conflictedFiles.Any())
+            if (conflictedFiles.Count != 0)
                 throw new BadRequestException($"Hədəf qovluqda artıq bu fayllar mövcuddur: {string.Join(", ", conflictedFiles.Select(f => f.Name))}");
 
             foreach (var file in filesToCopy)
             {
                 var clonedFile = CloneFile(file);
 
-                var (prefix, numberLength) = CodeParsingHelper.ExtractPrefixAndLength(clonedFile.Code);
-                var existingCodes = FolderTreeHelper.GetAllCodesWithPrefix(rootFolder, prefix);
-                clonedFile.Code = FileCodeGenerator.GenerateNextCode(existingCodes, prefix, numberLength);
+                //var (prefix, numberLength) = CodeParsingHelper.ExtractPrefixAndLength(clonedFile.Code);
+                //var existingCodes = FolderTreeHelper.GetAllCodesWithPrefix(rootFolder, prefix);
+                //clonedFile.Code = FileCodeGenerator.GenerateNextCode(existingCodes, prefix, numberLength);
 
                 targetFolder.Files.Add(clonedFile);
             }
@@ -152,7 +171,7 @@ namespace Folder.Services.FolderFileServices
             await SaveRootAsync(rootFolder);
         }
 
-        public async Task<BaseFile> CreateFileAsync(string folderPath, Guid sqlId, string name, string code)
+        public async Task<BaseFile> CreateFileAsync(string folderPath, Guid sqlId, string name)
         {
             var rootFolder = await GetRootAsync();
             var folder = FolderTreeHelper.FindFolderRecursive(rootFolder, folderPath)
@@ -169,7 +188,6 @@ namespace Folder.Services.FolderFileServices
                 Id = ObjectId.GenerateNewId().ToString(),
                 SqlId = sqlId.ToString(),
                 Name = name,
-                Code = code,
                 CreateDate = DateTime.UtcNow
             };
 
@@ -180,19 +198,6 @@ namespace Folder.Services.FolderFileServices
             await SaveRootAsync(rootFolder);
 
             return newFile;
-        }
-        public async Task<string> GenerateNextFileCodeAsync(string folderPath, string prefix, int numberLength)
-        {
-            var folder = await _folderService.GetFolderByPathAsync(folderPath)
-                         ?? throw new NotFoundException("Qovluq tapılmadı.");
-
-            var matchingCodes = folder.Files
-                .OfType<BaseFile>()
-                .Where(f => f.Code.StartsWith(prefix))
-                .Select(f => f.Code)
-                .ToList();
-
-            return FileCodeGenerator.GenerateNextCode(matchingCodes, prefix, numberLength);
         }
 
         private BaseFile CloneFile(BaseFile file)

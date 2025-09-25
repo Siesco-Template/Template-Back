@@ -19,12 +19,9 @@ namespace MainProject.API.Business
             services.AddHttpContextAccessor();
             services.AddScoped<CurrentUser>();
             services.AddScoped<IUserService, UserService>();
-            //services.AddScoped<IUserFileService, UserFileService>();
-            //services.AddScoped<OrganizationFileService>();
             services.AddScoped<DbContext, MainDbContext>();
             services.AddScoped<EntitySetProvider>();
             services.AddScoped<ReportService>();
-            //services.AddScoped<ReportFileService>();
             services.AddScoped<GetQueryHelper>();
             services.AddScoped<RuleProvider>();
             services.AddScoped<ExportQueryHelper>();

@@ -7,8 +7,8 @@
     {
         public string TargetPath { get; set; } = null!;
 
-        public List<FolderCopyItem>? FoldersToCopy { get; set; } = new();
-        public List<FileCopyItem>? FilesToCopy { get; set; } = new();
+        public List<FolderCopyItem>? FoldersToCopy { get; set; } = [];
+        public List<FileCopyItem>? FilesToCopy { get; set; } = [];
     }
 
     public class FolderCopyItem

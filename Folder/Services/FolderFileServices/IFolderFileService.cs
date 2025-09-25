@@ -10,7 +10,7 @@ namespace Folder.Services.FolderFileServices
         Task DeleteFilesAsync(string folderPath, Func<BaseFile, bool> predicate);
         Task CopyFilesAsync(string sourceFolderPath, string targetFolderPath, Func<BaseFile, bool> predicate);
         Task MoveFilesAsync(string sourceFolderPath, string targetFolderPath, Func<BaseFile, bool> predicate);
-        Task<string> GenerateNextFileCodeAsync(string folderPath, string prefix, int numberLength);
-        Task<BaseFile> CreateFileAsync(string folderPath, Guid sqlId, string name, string code);
+        Task DeleteFileAsync(string folderPath, string fileId);
+        Task<BaseFile> CreateFileAsync(string folderPath, Guid sqlId, string name);
     }
 }

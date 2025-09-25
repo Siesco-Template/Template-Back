@@ -13,9 +13,6 @@ namespace Folder.Entities
         [BsonElement("name")]
         public string Name { get; set; }
 
-        [BsonElement("code")]
-        public string Code { get; set; }
-
         [BsonElement("createDate")]
         public DateTime CreateDate { get; set; }
     }
