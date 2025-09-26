@@ -11,6 +11,7 @@ namespace Folder.Services.FolderFileServices
         Task CopyFilesAsync(string sourceFolderPath, string targetFolderPath, Func<BaseFile, bool> predicate);
         Task MoveFilesAsync(string sourceFolderPath, string targetFolderPath, Func<BaseFile, bool> predicate);
         Task DeleteFileAsync(string folderPath, string fileId);
+        Task BulkDeleteFileAsync(string folderPath, List<string> fileIds);
         Task<BaseFile> CreateFileAsync(string folderPath, Guid sqlId, string name);
     }
 }

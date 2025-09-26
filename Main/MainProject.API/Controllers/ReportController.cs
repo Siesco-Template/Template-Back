@@ -38,5 +38,12 @@ namespace MainProject.API.Controllers
             await _reportService.DeleteReportAsync(reportId);
             return Ok();
         }
+
+        [HttpDelete("[action]")]
+        public async Task<IActionResult> BulkDeleteReport(List<Guid> reportIds)
+        {
+            await _reportService.BulkDeleteAsync(reportIds);
+            return Ok();
+        }
     }
 }

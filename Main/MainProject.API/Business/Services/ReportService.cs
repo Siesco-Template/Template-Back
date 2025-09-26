@@ -90,5 +90,24 @@ namespace MainProject.API.Business.Services
             await _context.SaveChangesAsync();
             await _folderFileService.DeleteFileAsync("/Reports", report.Id.ToString());
         }
+
+        public async Task BulkDeleteAsync(List<Guid> ids)
+        {
+            if (ids == null || ids.Count == 0)
+                throw new BadRequestException("Silinəcək istifadəçi id-ləri göndərilməyib.");
+
+            var reports = _context.Reports.Where(u => ids.Contains(u.Id)).ToList();
+
+            if (reports.Count == 0)
+                throw new NotFoundException("Silinəcək istifadəçi tapılmadı.");
+
+            _context.Reports.RemoveRange(reports);
+            await _context.SaveChangesAsync();
+
+            var folderPath = "/Reports";
+            var fileIds = reports.Select(u => u.Id.ToString()).ToList();
+
+            await _folderFileService.BulkDeleteFileAsync(folderPath, fileIds);
+        }
     }
 }

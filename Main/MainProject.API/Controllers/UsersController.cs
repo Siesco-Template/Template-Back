@@ -19,7 +19,6 @@ namespace MainProject.API.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var user = await _userService.GetByIdAsync(id);
-            if (user == null) return NotFound();
             return Ok(user);
         }
 
@@ -41,6 +40,13 @@ namespace MainProject.API.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             await _userService.DeleteAsync(id);
+            return Ok();
+        }
+
+        [HttpDelete("[action]")]
+        public async Task<IActionResult> BulkDelete(List<Guid> ids)
+        {
+            await _userService.BulkDeleteAsync(ids);
             return Ok();
         }
     }

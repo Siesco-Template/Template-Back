@@ -90,6 +90,25 @@ namespace MainProject.API.Business.Services
                 await _folderFileService.DeleteFileAsync(folderPath, fileId);
             }
         }
+
+        public async Task BulkDeleteAsync(List<Guid> ids)
+        {
+            if (ids == null || ids.Count == 0)
+                throw new BadRequestException("Silinəcək istifadəçi id-ləri göndərilməyib.");
+
+            var users = _context.Users.Where(u => ids.Contains(u.Id)).ToList();
+
+            if (users.Count == 0)
+                throw new NotFoundException("Silinəcək istifadəçi tapılmadı.");
+
+            _context.Users.RemoveRange(users);
+            await _context.SaveChangesAsync();
+
+            var folderPath = "/Users";
+            var fileIds = users.Select(u => u.Id.ToString()).ToList();
+
+            await _folderFileService.BulkDeleteFileAsync(folderPath, fileIds);
+        }
     }
 
     public interface IUserService
@@ -99,5 +118,6 @@ namespace MainProject.API.Business.Services
         Task CreateAsync(CreateUserDto dto);
         Task UpdateAsync(UpdateUserDto dto);
         Task DeleteAsync(Guid id);
+        Task BulkDeleteAsync(List<Guid> ids);
     }
 }

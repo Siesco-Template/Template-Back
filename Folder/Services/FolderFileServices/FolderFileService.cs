@@ -200,6 +200,30 @@ namespace Folder.Services.FolderFileServices
             return newFile;
         }
 
+        public async Task BulkDeleteFileAsync(string folderPath, List<string> fileIds)
+        {
+            if (fileIds == null || fileIds.Count == 0)
+                throw new BadRequestException("Silinəcək fayl id-ləri göndərilməyib.");
+
+            var rootFolder = await GetRootAsync();
+            var folder = FolderTreeHelper.FindFolderRecursive(rootFolder, folderPath)
+                         ?? throw new NotFoundException("Qovluq tapılmadı.");
+
+            var filesToRemove = folder.Files.Where(f => fileIds.Contains(f.SqlId)).ToList();
+
+            if (filesToRemove.Count == 0)
+                throw new NotFoundException("Silinəcək fayl tapılmadı.");
+
+            foreach (var file in filesToRemove)
+            {
+                folder.Files.Remove(file);
+            }
+
+            folder.UpdateDate = DateTime.UtcNow;
+            FolderTreeHelper.UpdateParentDates(rootFolder, folderPath);
+            await SaveRootAsync(rootFolder);
+        }
+
         private BaseFile CloneFile(BaseFile file)
         {
             var serialized = JsonSerializer.Serialize(file);
@@ -217,5 +241,6 @@ namespace Folder.Services.FolderFileServices
             var filter = Builders<FolderEntity>.Filter.Eq(f => f.Path, _rootPath);
             await _collection.ReplaceOneAsync(filter, rootFolder);
         }
+
     }
 }
