@@ -151,7 +151,7 @@ namespace MainProject.API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> CopyFoldersAndFiles([FromBody] CombinedMoveDto dto)
         {
-            if (dto.FolderNames != null && dto.FolderNames.Any())
+            if (dto.FolderNames != null && dto.FolderNames.Count != 0)
             {
                 await _folderService.BulkCopyFoldersAsync(dto.SourcePath, dto.TargetPath, dto.FolderNames);
             }
