@@ -31,5 +31,12 @@ namespace MainProject.API.Controllers
             var result = await _getQueryHelper.GetQuery(tableRequest);
             return Ok(result);
         }
+
+        [HttpDelete("[action]")]
+        public async Task<IActionResult> DeleteReport(Guid reportId)
+        {
+            await _reportService.DeleteReportAsync(reportId);
+            return Ok();
+        }
     }
 }

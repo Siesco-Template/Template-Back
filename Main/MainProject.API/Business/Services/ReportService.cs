@@ -82,5 +82,13 @@ namespace MainProject.API.Business.Services
 
             return report;
         }
+
+        public async Task DeleteReportAsync(Guid reportId)
+        {
+            var report = await _context.Reports.FirstOrDefaultAsync(x => x.Id == reportId) ?? throw new NotFoundException("Report mövcud deyil!");
+            _context.Reports.Remove(report);
+            await _context.SaveChangesAsync();
+            await _folderFileService.DeleteFileAsync("/Reports", report.Id.ToString());
+        }
     }
 }

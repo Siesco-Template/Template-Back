@@ -48,6 +48,7 @@ namespace MainProject.API.Controllers
                 .Select(f => new FileDto
                 {
                     Id = f.Id,
+                    SqlId = f.SqlId,
                     FileName = f.Name,
                     CreateDate = f.CreateDate,
                     FolderPath = folder.Path
@@ -81,6 +82,7 @@ namespace MainProject.API.Controllers
                     .Select(f => new FileDto
                     {
                         Id = f.Id,
+                        SqlId = f.SqlId,
                         FileName = f.Name,
                         CreateDate = f.CreateDate,
                         FolderPath = folder.Path
