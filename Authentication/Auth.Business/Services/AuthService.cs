@@ -449,5 +449,17 @@ namespace Auth.Business.Services
                 UserRole = user.UserRole
             };
         }
+
+        public async Task UpdateProfileAsync(UpdateProfileDto dto)
+        {
+            var user = await _context.AppUsers.FirstOrDefaultAsync(x => x.Id == _currentUser.UserGuid) ?? throw new BadRequestException("İstifadəçi mövcüd deyil!");
+
+            user.FirstName = dto.FirstName;
+            user.LastName = dto.LastName;
+            user.Email = dto.Email;
+            user.PhoneNumber = dto.PhoneNumber;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

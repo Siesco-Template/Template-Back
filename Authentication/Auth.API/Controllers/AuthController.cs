@@ -124,5 +124,13 @@ namespace Auth.API.Controllers
             var data = await _authService.GetProfileAsync();
             return Ok(data);
         }
+
+        [Authorize]
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
+        {
+            await _authService.UpdateProfileAsync(dto);
+            return Ok();
+        }
     }
 }
