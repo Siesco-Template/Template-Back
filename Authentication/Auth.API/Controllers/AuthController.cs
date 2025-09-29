@@ -4,7 +4,6 @@ using Auth.Business.Utilies.PasswordUtilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SharedLibrary.Attributes;
-using SharedLibrary.Enums;
 using SharedLibrary.StaticDatas;
 
 namespace Auth.API.Controllers
@@ -116,6 +115,14 @@ namespace Auth.API.Controllers
         public async Task<IActionResult> GetAllUsersForPermission()
         {
             return Ok(await _authService.GetAllUsersForPermissionAsync());
+        }
+
+        [Authorize]
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var data = await _authService.GetProfileAsync();
+            return Ok(data);
         }
     }
 }
