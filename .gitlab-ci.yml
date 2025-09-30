@@ -15,7 +15,7 @@ build-job:
     - echo " Docker image build edilir..."
     - docker compose build    
 
-deploy-job:
+deploy-job: 
   stage: deploy
   tags:
     - template
