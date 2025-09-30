@@ -1,24 +1,28 @@
-
 stages:
   - build
   - deploy
+
 variables: 
   DOCKER_HOST: "unix:///var/run/docker.sock"
+
 build-job:
   stage: build
   tags: 
     - template
   image: docker:20.10.24
   script:
+    - apk add --no-cache docker-cli-compose
     - echo " Docker image build edilir..."
     - docker compose build    
+
 deploy-job:
   stage: deploy
   tags:
     - template
   image: docker:20.10.24
   only:
-    - deploy   
+    - depLoy   
   script:
+    - apk add --no-cache docker-cli-compose
     - echo " Deploy edilir..."
     - docker compose up -d --build
