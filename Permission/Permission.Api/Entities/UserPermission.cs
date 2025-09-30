@@ -17,7 +17,7 @@ namespace Permission.Api.Entities
         public bool IsBlocked { get; set; }
 
         [BsonElement("permissions")]
-        public List<UserPagePermission> Permissions { get; set; } = new();
+        public List<UserPagePermission> Permissions { get; set; } = [];
     }
 
     public class UserPagePermission
@@ -26,6 +26,6 @@ namespace Permission.Api.Entities
         public string PageKey { get; set; }
 
         [BsonElement("actionKeys")]
-        public List<string> ActionKeys { get; set; } = new();
+        public List<string> ActionKeys { get; set; } = [];
     }
 }

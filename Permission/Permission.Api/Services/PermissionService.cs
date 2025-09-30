@@ -20,11 +20,15 @@ namespace Permission.Api.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
-        public PermissionService(IMongoDatabase database, CurrentUser curentUser, HttpClient httpClient, IConfiguration configuration)
+        public PermissionService(MongoDbService mongoDbService,
+            CurrentUser currentUser,
+            HttpClient httpClient,
+            IConfiguration configuration)
         {
+            var database = mongoDbService.GetDatabase();
             _pages = database.GetCollection<Page>("Pages");
             _userPermissions = database.GetCollection<UserPermission>("UserPermissions");
-            _currentUser = curentUser;
+            _currentUser = currentUser;
             _httpClient = httpClient;
             _configuration = configuration;
         }
@@ -39,7 +43,7 @@ namespace Permission.Api.Services
 
             if (userPermissions == null)
             {
-                return new List<PageDto>();
+                return [];
             }
 
             var allPages = await _pages.Find(_ => true).ToListAsync();
@@ -76,11 +80,7 @@ namespace Permission.Api.Services
             // currentUser-in movcud icazelerini getir
             var currentUserPermissions = await _userPermissions
                                                    .Find(up => up.UserId == _currentUser.UserGuid)
-                                                   .FirstOrDefaultAsync();
-
-            if (currentUserPermissions == null)
-                //throw new ForbiddenException("İstifadəçi mövcud deyil.");
-                throw new NotFoundException("İstifadəçi mövcud deyil.");
+                                                   .FirstOrDefaultAsync() ?? throw new NotFoundException("İstifadəçi mövcud deyil.");
 
             // db-de movcud olan butun page ve action-lari getir
             var existingPages = await _pages
@@ -113,7 +113,7 @@ namespace Permission.Api.Services
                 bulkOps.Add(new UpdateOneModel<UserPermission>(filter, update) { IsUpsert = true });
             }
 
-            if (bulkOps.Any())
+            if (bulkOps.Count != 0)
             {
                 var result = await _userPermissions.BulkWriteAsync(bulkOps);
                 return result.IsAcknowledged;
@@ -154,10 +154,7 @@ namespace Permission.Api.Services
         public async Task<DataListDto<UserPermissionsDto>> GetAllUserPermissions(int skip = 0, int take = 10)
         {
             var currentUser = await _userPermissions.Find(x => x.UserId == _currentUser.UserGuid)
-                                   .FirstOrDefaultAsync();
-            if (currentUser == null)
-                throw new NotFoundException("İstifadəçi mövcud deyil.");
-
+                                   .FirstOrDefaultAsync() ?? throw new NotFoundException("İstifadəçi mövcud deyil.");
             var currentPermissionDict = currentUser.Permissions
                 .ToDictionary(p => p.PageKey, p => p.ActionKeys.ToHashSet());
 
@@ -193,8 +190,6 @@ namespace Permission.Api.Services
             })
               .ToList();
 
-            //return users;
-
             return new DataListDto<UserPermissionsDto>
             {
                 Datas = users,
@@ -208,10 +203,7 @@ namespace Permission.Api.Services
         public async Task<UserPermissionsDto> GetUserPermissionsById(Guid userId)
         {
             var currentUser = await _userPermissions.Find(x => x.UserId == _currentUser.UserGuid)
-                                       .FirstOrDefaultAsync();
-            if (currentUser == null)
-                throw new NotFoundException("Hazırkı istifadəçi mövcud deyil.");
-
+                                       .FirstOrDefaultAsync() ?? throw new NotFoundException("Hazırkı istifadəçi mövcud deyil.");
             if (userId == _currentUser.UserGuid)
                 throw new BadRequestException("Öz icazələrinizi bu metoddan əldə edə bilməzsiniz.");
 
@@ -220,9 +212,7 @@ namespace Permission.Api.Services
                 throw new NotFoundException("Super admin üçün icazə məlumatları göstərilə bilməz.");
 
             var targetUser = await _userPermissions.Find(x => x.UserId == userId)
-                                                   .FirstOrDefaultAsync();
-            if (targetUser == null)
-                throw new NotFoundException("İstifadəçi tapılmadı.");
+                                                   .FirstOrDefaultAsync() ?? throw new NotFoundException("İstifadəçi tapılmadı.");
 
             var currentPermissionDict = currentUser.Permissions
                 .ToDictionary(p => p.PageKey, p => p.ActionKeys.ToHashSet());
@@ -246,8 +236,6 @@ namespace Permission.Api.Services
                 Permissions = permissions
             };
         }
-
-
 
         /// <summary>
         /// currentUser-ın icazelerini qaytarir
@@ -278,7 +266,7 @@ namespace Permission.Api.Services
         }
 
         /// <summary>
-        /// user-in permissionu olub olmamasinin yoxlanilmasi 
+        /// user-in permissionu olub olmamasinin yoxlanilmasi
         /// </summary>
         public async Task<bool> CheckPermissionAsync(Guid userId, string page, string action)
         {
@@ -300,7 +288,6 @@ namespace Permission.Api.Services
         /// </summary>
         public async Task SyncUsersAsync()
         {
-            //var real = "http://localhost:5001/api/Auth/GetAllUsersForPermission";
             var url = $"{_configuration["AuthService:BaseUrl"]}/Auth/GetAllUsersForPermission";
             var response = await _httpClient.GetAsync(url);
             var mainData = await response.Content.ReadFromJsonAsync<List<UserDto>>();
@@ -321,7 +308,7 @@ namespace Permission.Api.Services
             }
             catch
             {
-                existingUsers = new List<UserPermission>();
+                existingUsers = [];
             }
 
             var existingUserDict = existingUsers.ToDictionary(u => u.UserId);
@@ -350,11 +337,10 @@ namespace Permission.Api.Services
 
             var deletedUserIds = existingUserDict.Keys.Except(incomingIds).ToList();
 
-            if (newUsers.Any()) await _userPermissions.InsertManyAsync(newUsers);
-            if (updatedUsers.Any()) await _userPermissions.BulkWriteAsync(updatedUsers);
-            if (deletedUserIds.Any()) await _userPermissions.DeleteManyAsync(u => deletedUserIds.Contains(u.UserId));
+            if (newUsers.Count != 0) await _userPermissions.InsertManyAsync(newUsers);
+            if (updatedUsers.Count != 0) await _userPermissions.BulkWriteAsync(updatedUsers);
+            if (deletedUserIds.Count != 0) await _userPermissions.DeleteManyAsync(u => deletedUserIds.Contains(u.UserId));
         }
-
 
         /// <summary>
         /// proyekt ayaga qalxanda attributlardan oxunan page ve action-larin db-e elave olunmasi
@@ -412,7 +398,7 @@ namespace Permission.Api.Services
                     .Where(a => !existingActionDict.ContainsKey(a.Key))
                     .ToList();
 
-                if (newActions.Any())
+                if (newActions.Count != 0)
                 {
                     var actionAddUpdate = Builders<Page>.Update.AddToSetEach(p => p.Actions, newActions);
                     await _pages.UpdateOneAsync(p => p.Key == page.Key, actionAddUpdate);
@@ -448,7 +434,7 @@ namespace Permission.Api.Services
                 }
             }
 
-            if (newPages.Any())
+            if (newPages.Count != 0)
             {
                 await _pages.InsertManyAsync(newPages);
 
@@ -558,7 +544,7 @@ namespace Permission.Api.Services
                     .Where(a => deletedActions.Contains(a.Key))
                     .ToList();
 
-                if (deletedOriginalActions.Any())
+                if (deletedOriginalActions.Count != 0)
                 {
                     var pullUpdate = Builders<Page>.Update.PullFilter(
                                                 p => p.Actions,
@@ -588,11 +574,9 @@ namespace Permission.Api.Services
             }
 
             return logMessages;
-
         }
 
         #endregion
-
 
         #region Consumer metodlari
 

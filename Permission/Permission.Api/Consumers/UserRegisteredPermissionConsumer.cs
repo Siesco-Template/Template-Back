@@ -16,7 +16,7 @@ namespace Permission.Api.Consumers
                 UserId = userEvent.UserId,
                 FullName = userEvent.FullName,
                 IsBlocked = userEvent.IsBlocked,
-                Permissions = new List<UserPagePermission>()
+                Permissions = []
             };
 
             await _service.AddUserPermissionAsync(newUserPermission);

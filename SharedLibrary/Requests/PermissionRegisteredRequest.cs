@@ -4,6 +4,6 @@ namespace SharedLibrary.Requests
 {
     public class PermissionRegisteredRequest
     {
-        public List<PageDto> Pages { get; set; } = new();
+        public List<PageDto> Pages { get; set; } = [];
     }
 }

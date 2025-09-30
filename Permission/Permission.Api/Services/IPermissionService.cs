@@ -2,14 +2,12 @@
 using Permission.Api.Entities;
 using SharedLibrary.Dtos.Common;
 using SharedLibrary.Dtos.PermissionDtos;
-using SharedLibrary.Events;
 using SharedLibrary.Requests;
 
 namespace Permission.Api.Services
 {
     public interface IPermissionService
     {
-        
         Task<List<PageDto>> GetAllPagesAndActionsAsync();
         Task<bool> UpdateUserPermissionsAsync(List<UpdateUserPermissionsDto> updatedPermissions);
         Task<DataListDto<UserPermissionsDto>> GetAllUserPermissions(int skip = 0, int take = 10);

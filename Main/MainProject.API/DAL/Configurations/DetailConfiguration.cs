@@ -15,6 +15,7 @@ namespace MainProject.API.DAL.Configurations
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
+
         }
     }
 }

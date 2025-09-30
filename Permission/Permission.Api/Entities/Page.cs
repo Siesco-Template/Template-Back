@@ -12,6 +12,6 @@ namespace Permission.Api.Entities
         public string Name { get; set; }
 
         [BsonElement("actions")]
-        public List<Action> Actions { get; set; } = new();
+        public List<Action> Actions { get; set; } = [];
     }
 }

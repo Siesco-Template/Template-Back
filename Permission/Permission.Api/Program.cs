@@ -1,9 +1,6 @@
-﻿using MongoDB.Driver;
-using Permission.Api;
-using Permission.Api.DAL;
-using SharedLibrary;
+﻿using Permission.Api;
+using Permission.Api.Services;
 using SharedLibrary.ServiceRegistration;
-using SharedLibrary.Settings;
 
 internal class Program
 {
@@ -17,27 +14,7 @@ internal class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwagger();
 
-        builder.Services.AddPermissionServices();
-
-        builder.Services.AddHttpClient();
-
-        builder.Services.AddSingleton(new PermissionServiceConfig
-        {
-#if DEBUG
-            BaseUrl = "http://localhost:5003/api"
-#else
-            BaseUrl = "https://template-api.microsol.az/permission"
-#endif
-        });
-
-        var mongoDbSettings = builder.Configuration.GetSection("MongoDb").Get<MongoDbSettings>();
-        builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoDbSettings.ConnectionString));
-        builder.Services.AddSingleton(serviceProvider =>
-        {
-            var client = serviceProvider.GetRequiredService<IMongoClient>();
-            return client.GetDatabase(mongoDbSettings.DatabaseName);
-        });
-        builder.Services.AddSingleton<MongoDbContext>();
+        builder.RegisterPermissionComponent("MongoDb");
 
         builder.Services.AddCors(options =>
         {
@@ -51,18 +28,15 @@ internal class Program
         builder.Services.AddMassTransitPermission(configuration["RabbitMQ:Username"]!, configuration["RabbitMQ:Password"]!, configuration["RabbitMQ:Hostname"]!, configuration["RabbitMQ:Port"]!);
 
         builder.Services.AddAuth(configuration["Jwt:Issuer"]!, configuration["Jwt:Audience"]!, configuration["Jwt:SigningKey"]!);
-        // shared-deki servisler
         builder.Services.AddSharedServices(configuration);
+
         var app = builder.Build();
 
-        //if (app.Environment.IsDevelopment())
-        //{
         app.UseSwagger();
         app.UseSwaggerUI(x =>
         {
             x.ConfigObject.AdditionalItems.Add("persistAuthorization", "true");
         });
-        //}
 
         app.UseHttpsRedirection();
 

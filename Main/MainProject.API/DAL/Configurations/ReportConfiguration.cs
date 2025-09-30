@@ -12,6 +12,8 @@ namespace MainProject.API.DAL.Configurations
                 .WithMany(x => x.Reports)
                 .HasForeignKey(x => x.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.ToTable(t=>t.HasCheckConstraint("CK_Reports_Number", "5>0"));
         }
     }
 }

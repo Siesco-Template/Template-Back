@@ -4,6 +4,6 @@
     {
         public string FolderName { get; set; }
         public string FolderPath { get; set; }
-        public List<UserPermissionsDto> Users { get; set; } = new();
+        public List<UserPermissionsDto> Users { get; set; } = [];
     }
 }

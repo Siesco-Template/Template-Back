@@ -24,7 +24,7 @@ namespace MainProject.API.Business.Services
             // 2. Mongo'dan tap və sil
             await _folderFileService.DeleteFilesAsync(folderPath, file => file.Id == userId);
         }
-
+            
         public async Task BulkDeleteUsersAsync(List<string> userIds, string folderPath)
         {
             var userGuids = userIds.Select(id => Guid.Parse(id)).ToList();
@@ -72,7 +72,7 @@ namespace MainProject.API.Business.Services
                 if (folder?.Files != null)
                 {
                     foreach (var file in folder.Files)
-                        userIdsToDelete.Add(file.Id);
+                        userIdsToDelete.Add(file.SqlId);
                 }
             }
             var userGuidsToDelete = userIdsToDelete.Select(id => Guid.Parse(id)).ToList();

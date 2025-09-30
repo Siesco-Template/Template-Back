@@ -1,18 +1,32 @@
 ﻿using MassTransit;
 using Permission.Api.Consumers;
-using Permission.Api.Services;
+using SharedLibrary;
 using SharedLibrary.HelperServices;
+using SharedLibrary.Settings;
 
-namespace Permission.Api
+namespace Permission.Api.Services
 {
-    public static class ServiceRegistration
+    public static class PermissionRegistration
     {
-        public static void AddPermissionServices(this IServiceCollection services)
+        public static void RegisterPermissionComponent(this WebApplicationBuilder builder, string MongoDbName)
         {
-            services.AddHttpContextAccessor();
-            services.AddScoped<CurrentUser>();
-            services.AddScoped<IPermissionService, PermissionService>();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection(MongoDbName));
+            builder.Services.AddSingleton<MongoDbService>();
+            builder.Services.AddScoped<IPermissionService, PermissionService>();
+            builder.Services.AddScoped<CurrentUser>();
+            builder.Services.AddHttpClient();
+
+            builder.Services.AddSingleton(new PermissionServiceConfig
+            {
+#if DEBUG
+                BaseUrl = "http://localhost:5003/api"
+#else
+            BaseUrl = "https://template-api.microsol.az/permission"
+#endif
+            });
         }
+
         public static IServiceCollection AddMassTransitPermission(this IServiceCollection services, string username, string password, string hostname, string port)
         {
             password = Uri.EscapeDataString(password);

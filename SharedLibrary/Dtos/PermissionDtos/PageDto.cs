@@ -4,6 +4,6 @@
     {
         public string Key { get; set; } = null!;
         public string Name { get; set; } = null!;
-        public List<ActionDto> Actions { get; set; } = new();
+        public List<ActionDto> Actions { get; set; } = [];
     }
 }
