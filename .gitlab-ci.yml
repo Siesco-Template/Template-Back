@@ -2,7 +2,7 @@
 stages:
   - build
   - deploy
-variables:
+variables: 
   DOCKER_HOST: "unix:///var/run/docker.sock"
 build-job:
   stage: build
