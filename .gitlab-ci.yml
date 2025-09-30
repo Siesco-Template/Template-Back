@@ -6,7 +6,7 @@ variables:
   DOCKER_HOST: "unix:///var/run/docker.sock"
 build-job:
   stage: build
-  tags:
+  tags: 
     - template
   image: docker:20.10.24
   script:
