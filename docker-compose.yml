@@ -1,44 +1,45 @@
+
 version: '3.8'
 services:
   gateway:
-    container_name: template-gateway
+    container_name: template-gateway-gitlab
     build:
       context: .
       dockerfile: Gateway/Template.Gateway/Dockerfile
     ports:
-      - "5031:8080"
+      - "6031:8080"
     depends_on:
       - auth
       - permission
     networks:
       - public-network
   main:
-    container_name: template-main-service
+    container_name: template-main-service-gitlab
     build:
       context: .
       dockerfile: Main/MainProject.API/Dockerfile
     ports:
-      - "5034:8080"
+      - "6034:8080"
     volumes:
       - /Main/MainProject.API/wwwroot:/app/wwwroot 
     networks:
       - public-network
   auth:
-    container_name: template-auth-service
+    container_name: template-auth-service-gitlab
     build:
       context: .
       dockerfile: Authentication/Auth.API/Dockerfile
     ports:
-      - "5032:8080"
+      - "6032:8080"
     networks:
       - public-network      
   permission:
-    container_name: template-permission-service
+    container_name: template-permission-service-gitlab
     build:
       context: .
       dockerfile: Permission/Permission.Api/Dockerfile
     ports:
-      - "5033:8080"
+      - "6033:8080"
     networks:
       - public-network
 networks:
