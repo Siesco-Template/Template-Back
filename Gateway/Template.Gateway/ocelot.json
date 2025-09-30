@@ -5,7 +5,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-auth-service",
+          "Host": "template-auth-service-gitlab",
           "Port": 8080
         }
       ],
@@ -18,7 +18,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-main-service",
+          "Host": "template-main-service-gitlab",
           "Port": 8080
         }
       ],
@@ -31,7 +31,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "template-permission-service",
+          "Host": "template-permission-service-gitlab",
           "Port": 8080
         }
       ],
