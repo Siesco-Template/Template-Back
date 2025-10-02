@@ -27,7 +27,6 @@ namespace MainProject.API.Business
             services.AddScoped<ExportQueryHelper>();
             services.AddScoped<ExportService>();
             services.AddScoped<ImportService>();
-            services.AddScoped<CatalogService>();
         }
 
         public static IServiceCollection AddMainMassTransit(this IServiceCollection services, string username, string password, string hostname, string port)
