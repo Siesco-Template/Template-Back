@@ -15,7 +15,8 @@ namespace TableComponent.Extensions
         public async Task<PaginationResult> GetQuery(TableQueryRequest tableRequest)
         {
             var finalQuery = await GenerateQuery(tableRequest);
-            return finalQuery.ApplyPagination(tableRequest.Pagination);
+            var totalCount = finalQuery.Count();
+            return finalQuery.ApplyPagination(tableRequest.Pagination, totalCount);
         }
 
         public async Task<IQueryable<dynamic>> GetQuery(TableQueryRequest tableRequest, bool isExcel)

@@ -31,15 +31,13 @@ namespace QueryGenerator.Extensions
             return (IQueryable<T>)source.Provider.CreateQuery(resultExpression);
         }
 
-        public static PaginationResult ApplyPagination(this IQueryable query, PaginationRequest? request)
+        public static PaginationResult ApplyPagination(this IQueryable query, PaginationRequest? request, int? totalCount = null)
         {
             request ??= new PaginationRequest();
 
             var take = AllowedPageSizes.Contains(request.Take) && request.Take > 0
                                                                  ? request.Take : AllowedPageSizes.First();
             var page = request.Page < 1 ? 1 : request.Page;
-
-            var totalCount = query.Count();
 
             if (request.IsInfiniteScroll)
             {
@@ -54,7 +52,7 @@ namespace QueryGenerator.Extensions
             return new PaginationResult
             {
                 Items = items,
-                TotalCount = totalCount,
+                TotalCount = totalCount ?? query.Count(),
                 Page = page,
                 Take = take
             };
