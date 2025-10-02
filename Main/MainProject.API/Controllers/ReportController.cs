@@ -45,5 +45,12 @@ namespace MainProject.API.Controllers
             await _reportService.BulkDeleteAsync(reportIds);
             return Ok();
         }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetReportsByOrganizationId(string organizationId)
+        {
+            var data = await _reportService.GetReportsByOrganizationIdAsync(organizationId);
+            return Ok(data);
+        }
     }
 }
