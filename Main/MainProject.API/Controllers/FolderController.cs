@@ -58,7 +58,7 @@ namespace MainProject.API.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetFoldersAndFiles([FromQuery] string path)
+        public async Task<IActionResult> GetFoldersAndFiles([FromQuery] string path, bool isCatalog)
         {
             if (path == "/") throw new BadRequestException();
 
@@ -85,7 +85,8 @@ namespace MainProject.API.Controllers
                         SqlId = f.SqlId,
                         FileName = f.Name,
                         CreateDate = f.CreateDate,
-                        FolderPath = folder.Path
+                        FolderPath = folder.Path,
+                        IsCatalog = isCatalog
                     }).ToList()
             });
         }

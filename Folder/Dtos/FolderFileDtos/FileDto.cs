@@ -11,5 +11,6 @@
         /// search zamani path qayitsin deye elave etdim
         /// </summary>
         public string FolderPath { get; set; } = null!;
+        public bool IsCatalog { get; set; }
     }
 }
