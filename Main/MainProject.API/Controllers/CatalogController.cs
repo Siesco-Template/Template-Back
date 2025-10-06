@@ -18,13 +18,6 @@ namespace MainProject.API.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetDataByCatalogItemId(string catalogItemId, TableQueryRequest request)
-        {
-            var response = await _getQueryHelper.GetQuery(request);
-            return Ok(response);
-        }
-
-        [HttpGet("[action]")]
         public async Task<IActionResult> FilterByCatalog([FromQuery] CatalogFilterRequest request)
         {
             var filters = new List<FilterKeyValue>
