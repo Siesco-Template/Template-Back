@@ -565,5 +565,18 @@ namespace Folder.Services.FolderServices
                 searchRecursive(child, normalizedKeyword, matchingFolders, matchingFiles);
             }
         }
+
+        public async Task<bool> IsFolderExist(string path)
+        {
+            path = NormalizePath(path);
+
+            var filter = Builders<FolderEntity>.Filter.Or(
+            Builders<FolderEntity>.Filter.Eq(f => f.Path, path),
+            Builders<FolderEntity>.Filter.ElemMatch(f => f.Children,
+            Builders<FolderEntity>.Filter.Eq(c => c.Path, path))
+            );
+            bool exists = await _collection.Find(filter).AnyAsync();
+            return exists;
+        }
     }
 }
