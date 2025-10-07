@@ -514,8 +514,8 @@ namespace Folder.Services.FolderServices
             if (string.IsNullOrWhiteSpace(path))
                 throw new BadRequestException("Path boş ola bilməz.");
 
-            //if (path == "/")
-            //    throw new BadRequestException("Əsas qovluq (/) üzərində əməliyyat etmək icazəli deyil.");
+            if (path == "/")
+                throw new BadRequestException("Əsas qovluq (/) üzərində əməliyyat etmək icazəli deyil.");
 
             // Root həmişə "/"
             if (path == "/")
