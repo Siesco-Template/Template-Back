@@ -1,4 +1,6 @@
 ﻿using FilterComponent.Dtos;
+using FilterComponent.Entities;
+using FilterComponent.Enums;
 using FilterComponent.Extensions;
 using FilterComponent.Services;
 using QueryGenerator.Core;
@@ -17,6 +19,12 @@ namespace TableComponent.Extensions
             var finalQuery = await GenerateQuery(tableRequest);
             var totalCount = finalQuery.Count();
             return finalQuery.ApplyPagination(tableRequest.Pagination, totalCount);
+        }
+
+        public async Task<IQueryable<dynamic>> GetQuery(CatalogFilterRequest catalogFilterRequest)
+        {
+            var finalQuery = await GenerateCatalogFilterQuery(catalogFilterRequest);
+            return finalQuery;
         }
 
         public async Task<IQueryable<dynamic>> GetQuery(TableQueryRequest tableRequest, bool isExcel)
@@ -55,6 +63,16 @@ namespace TableComponent.Extensions
             }
 
             return DynamicProjectionHelper.GetSelectedColumns(query, catalogRequest.Columns);
+        }
+
+        private async Task<IQueryable<dynamic>> GenerateCatalogFilterQuery(CatalogFilterRequest catalogFilterRequest)
+        {
+            var entityType = _setProvider.GetEntityType(catalogFilterRequest.TableId) ?? throw new Exception("Cədvəl tapılmadı.");
+            var query = (IQueryable<dynamic>)_setProvider.GetQueryable(entityType);
+
+            var filteredQuery = await _filterService.ApplyFilter(query, new FilterDto { Filters = [new() { Column = catalogFilterRequest.CatalogColumn, Value = catalogFilterRequest.CatalogValue, FilterKey = FilterKey.Select, FilterOperation = FilterOperationType.Equal }] });
+
+            return DynamicProjectionHelper.GetSelectedColumns(filteredQuery, catalogFilterRequest.Columns);
         }
     }
 }

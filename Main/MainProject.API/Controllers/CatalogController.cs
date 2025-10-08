@@ -20,24 +20,7 @@ namespace MainProject.API.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> FilterByCatalog([FromQuery] CatalogFilterRequest request)
         {
-            var filters = new List<FilterKeyValue>
-            {
-                new()
-                {
-                    Column = request.CatalogColumn,
-                    FilterOperation = FilterOperationType.Equal,
-                    Value = request.CatalogValue
-                }
-            };
-
-            var tableRequest = new TableQueryRequest
-            {
-                TableId = request.TableId,
-                Columns = request.Columns,
-                Filters = filters
-            };
-
-            var result = await _getQueryHelper.GetQuery(tableRequest);
+            var result = await _getQueryHelper.GetQuery(request);
             return Ok(result);
         }
     }
