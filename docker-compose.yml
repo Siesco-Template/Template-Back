@@ -1,5 +1,5 @@
-
 version: '3.8'
+
 services:
   gateway:
     container_name: template-gateway-gitlab
@@ -11,8 +11,11 @@ services:
     depends_on:
       - auth
       - permission
+      - main
+    restart: always
     networks:
       - public-network
+
   main:
     container_name: template-main-service-gitlab
     build:
@@ -21,9 +24,16 @@ services:
     ports:
       - "6034:8080"
     volumes:
-      - /Main/MainProject.API/wwwroot:/app/wwwroot 
+      # ✅ Yol düzəldildi: nisbətən konteynerdəki /app/wwwroot doğru olsun deyə absolute path istifadə edilməlidir.
+      - ./Main/MainProject.API/wwwroot:/app/wwwroot
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     networks:
       - public-network
+
   auth:
     container_name: template-auth-service-gitlab
     build:
@@ -31,8 +41,10 @@ services:
       dockerfile: Authentication/Auth.API/Dockerfile
     ports:
       - "6032:8080"
+    restart: always
     networks:
       - public-network      
+
   permission:
     container_name: template-permission-service-gitlab
     build:
@@ -40,8 +52,10 @@ services:
       dockerfile: Permission/Permission.Api/Dockerfile
     ports:
       - "6033:8080"
+    restart: always
     networks:
       - public-network
+
 networks:
   public-network:
     external: true
