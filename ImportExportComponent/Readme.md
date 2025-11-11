@@ -80,3 +80,84 @@ Bu modul aşağıdakı əsas məqsədləri yerinə yetirir:
     { "Field": "DepartmentId", "ForeignTable": "Departments", "ForeignColumn": "Id" }
   ]
 }
+```
+
+Bu struktur sistemə **dinamik validasiya** dəstəyi verir:  
+- `IsRequired` → boşluq yoxlaması  
+- `MaxLength` → maksimum uzunluq  
+- `DataType` → tip yoxlaması (`Int`, `Decimal`, `Date` və s.)  
+- `ForeignTable` + `ForeignColumn` → başqa cədvəldə dəyərin olub-olmamasını yoxlayır  
+
+---
+
+## 🚀 Əməliyyat Axını
+
+### 🔹 **Import Prosesi**
+```
+Excel yüklənir → Başlıqlar avtomatik tanınır → Validasiya edilir → 
+İstifadəçi təsdiq edir → Məlumat DB-yə yazılır
+```
+
+### 🔹 **Export Prosesi**
+```
+Frontend API → ExportRequestDto → Queue.WriteAsync → 
+ExportWorkerService → ExportService → Excel faylı yaradılır → 
+DownloadList-ə link əlavə olunur → İstifadəçiyə bildiriş
+```
+
+---
+
+## ⚙️ Texnologiyalar
+
+| Texnologiya | İstifadə məqsədi |
+|--------------|------------------|
+| **ASP.NET Core 8.0** | API əsaslı servis arxitekturası |
+| **ClosedXML** | Excel fayllarının oxunması |
+| **OpenXML SDK** | Böyük Excel fayllarının yaddaş dostu yazılması |
+| **Entity Framework Core** | DB əməliyyatları və LINQ sorğuları |
+| **SignalR (Hub)** | Real-time bildirişlər |
+| **BackgroundService + Channel** | Asinxron export növbəsi |
+| **JsonSerializer / Newtonsoft.Json** | Qaydaların və dataların işlənməsi |
+| **LINQ Expressions** | Dinamik validasiya və sorğu icrası |
+
+---
+
+## 🧩 İstifadə Nümunələri
+
+### 🔹 **Excel Yükləmə və Önizləmə**
+```csharp
+var preview = await _importService.ExtractExcelPreviewAsync(file);
+```
+
+### 🔹 **Validasiya**
+```csharp
+var result = await _importService.ValidateRecords(new ValidateRequestDto
+{
+    TableName = "Users",
+    Records = preview.Records,
+    Mappings = new() { { "Ad", "Name" }, { "E-poçt", "Email" } }
+});
+```
+
+### 🔹 **İdxalı Təsdiqlə**
+```csharp
+await _importService.SaveRecords(new ImportConfirmRequestDto
+{
+    TableName = "Users",
+    Records = validRecords.Select(v => v.Records).ToList()
+});
+```
+
+### 🔹 **İxrac Əməliyyatı**
+```csharp
+await exportQueue.Writer.WriteAsync((columns, tableRequest, userId));
+```
+
+---
+
+## 🧑‍💻 Müəllif
+Hazırlayan: **Siesco Studio**  
+📧 Əlaqə: [info@siescostudio.az](mailto:info@siescostudio.az)  
+🏗 Layihə: Import/Export modulunun .NET əsaslı tətbiqi  
+
+---
