@@ -39,7 +39,7 @@ namespace Template.Gateway
                 opt.PathToSwaggerGenerator = "/swagger/docs";
             });
 
-            app.MapOpenApi();
+            //app.MapOpenApi();
 
             app.UseHttpsRedirection();
 
