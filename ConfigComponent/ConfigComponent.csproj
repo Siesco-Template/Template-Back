@@ -4,7 +4,14 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	  
+	<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+	<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+	<AssemblyName>ConfigComponent</AssemblyName>
   </PropertyGroup>
+
 
 	<ItemGroup>
 		<PackageReference Include="MongoDB.Bson" Version="3.4.0" />

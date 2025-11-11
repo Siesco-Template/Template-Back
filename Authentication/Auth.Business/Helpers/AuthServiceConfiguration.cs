@@ -27,7 +27,6 @@ namespace Auth.Business.Helpers
             services.AddScoped<GetQueryHelper>();
             services.AddScoped<DbContext, AuthDbContext>();
             services.AddScoped<EntitySetProvider>();
-            services.AddScoped<GetQueryHelper>();
         }
 
         public static void AddAuthMassTransit(this IServiceCollection services, string username, string password, string hostname, string port)

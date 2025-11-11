@@ -1,5 +1,4 @@
 ﻿using FilterComponent.Dtos;
-using FilterComponent.Entities;
 using FilterComponent.Enums;
 using FilterComponent.Extensions;
 using FilterComponent.Services;
@@ -14,6 +13,12 @@ namespace TableComponent.Extensions
     {
         private readonly EntitySetProvider _setProvider = setProvider;
         private readonly FilterService _filterService = filterService;
+
+        /// <summary>
+        /// Table datasının gətirilməsi Pagination ilə
+        /// </summary>
+        /// <param name="tableRequest"></param>
+        /// <returns></returns>
         public async Task<PaginationResult> GetQuery(TableQueryRequest tableRequest)
         {
             var finalQuery = await GenerateQuery(tableRequest);
@@ -21,23 +26,45 @@ namespace TableComponent.Extensions
             return finalQuery.ApplyPagination(tableRequest.Pagination, totalCount);
         }
 
+        /// <summary>
+        /// View as catalog-dan seçilmiş dəyərə əsasən filterlənmiş datanın gətirilməsi
+        /// </summary>
+        /// <param name="catalogFilterRequest"></param>
+        /// <returns></returns>
         public async Task<IQueryable<dynamic>> GetQuery(CatalogFilterRequest catalogFilterRequest)
         {
-            var finalQuery = await GenerateCatalogFilterQuery(catalogFilterRequest);
+            var finalQuery = await GenerateQuery(catalogFilterRequest);
             return finalQuery;
         }
 
+        /// <summary>
+        /// Excel export üçün pagination olmadan bütün datanın gətirilməsi
+        /// </summary>
+        /// <param name="tableRequest"></param>
+        /// <param name="isExcel"></param>
+        /// <returns></returns>
         public async Task<IQueryable<dynamic>> GetQuery(TableQueryRequest tableRequest, bool isExcel)
         {
             return await GenerateQuery(tableRequest);
         }
 
-        public async Task<PaginationResult> GetCatalog(CatalogQueryRequest catalogRequest)
+        /// <summary>
+        /// Filterdə Catalog üçün axtarış nəticələrinin gətirilməsi Infinite Scroll ilə
+        /// </summary>
+        /// <param name="catalogRequest"></param>
+        /// <returns></returns>
+        public async Task<PaginationResult> GetQuery(CatalogQueryRequest catalogRequest)
         {
-            var finalQuery = await GenerateCatalogQuery(catalogRequest);
+            var finalQuery = await GenerateQuery(catalogRequest);
             return finalQuery.ApplyInfiniteScroll(catalogRequest.Page);
         }
 
+        /// <summary>
+        /// Dinamik sorğuların yaradılması, filterin tətbiqi, sort və seçilmiş sütunların tətbiqi
+        /// </summary>
+        /// <param name="tableRequest"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private async Task<IQueryable<dynamic>> GenerateQuery(TableQueryRequest tableRequest)
         {
             var entityType = _setProvider.GetEntityType(tableRequest.TableId) ?? throw new Exception("Cədvəl tapılmadı.");
@@ -48,7 +75,7 @@ namespace TableComponent.Extensions
             return DynamicProjectionHelper.GetSelectedColumns(filteredQuery, tableRequest.Columns);
         }
 
-        private async Task<IQueryable<dynamic>> GenerateCatalogQuery(CatalogQueryRequest catalogRequest)
+        private async Task<IQueryable<dynamic>> GenerateQuery(CatalogQueryRequest catalogRequest)
         {
             var entityType = _setProvider.GetEntityType(catalogRequest.TableId) ?? throw new Exception("Cədvəl tapılmadı.");
             var query = (IQueryable<dynamic>)_setProvider.GetQueryable(entityType);
@@ -65,7 +92,7 @@ namespace TableComponent.Extensions
             return DynamicProjectionHelper.GetSelectedColumns(query, catalogRequest.Columns);
         }
 
-        private async Task<IQueryable<dynamic>> GenerateCatalogFilterQuery(CatalogFilterRequest catalogFilterRequest)
+        private async Task<IQueryable<dynamic>> GenerateQuery(CatalogFilterRequest catalogFilterRequest)
         {
             var entityType = _setProvider.GetEntityType(catalogFilterRequest.TableId) ?? throw new Exception("Cədvəl tapılmadı.");
             var query = (IQueryable<dynamic>)_setProvider.GetQueryable(entityType);

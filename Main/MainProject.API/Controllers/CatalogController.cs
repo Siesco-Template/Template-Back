@@ -1,6 +1,4 @@
-﻿using FilterComponent.Entities;
-using FilterComponent.Enums;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using TableComponent.Entities;
 using TableComponent.Extensions;
 
@@ -13,7 +11,7 @@ namespace MainProject.API.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> GetCatalog([FromQuery] CatalogQueryRequest catalogRequest)
         {
-            var result = await _getQueryHelper.GetCatalog(catalogRequest);
+            var result = await _getQueryHelper.GetQuery(catalogRequest);
             return Ok(result);
         }
 

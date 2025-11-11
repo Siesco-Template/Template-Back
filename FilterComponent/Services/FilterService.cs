@@ -19,7 +19,6 @@ namespace FilterComponent.Services
             _currentUser = currentUser;
         }
 
-
         /// <summary>
         /// Filteri yaratmaq 
         /// </summary>

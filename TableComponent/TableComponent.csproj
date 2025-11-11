@@ -12,6 +12,5 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\FilterComponent\FilterComponent.csproj" />
-	  <ProjectReference Include="..\QueryGenerator\QueryGenerator.csproj" />
 	</ItemGroup>
 </Project>
