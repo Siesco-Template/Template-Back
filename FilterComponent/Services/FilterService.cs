@@ -152,11 +152,15 @@ namespace FilterComponent.Services
         /// Id-ə uyğun table-in default filterin sorğusunu gətirir
         /// </summary>
         /// <param name="tableId"></param>
+        /// <param name="userId">Optional userId - background service'ler için kullanılır</param>
         /// <returns></returns>
-        public async Task<string?> GetDefaultFilterQuery(string tableId)
+        public async Task<string?> GetDefaultFilterQuery(string tableId, string? userId = null)
         {
+            // Background service'lerde HTTP context olmadığı için userId parametre olarak geçilmeli
+            var effectiveUserId = userId ?? _currentUser.UserId;
+            
             var defaultFilter = await _filtersCollection
-                .Find(filter => filter.IsDefault && filter.TableId == tableId && filter.UserId == _currentUser.UserId)
+                .Find(filter => filter.IsDefault && filter.TableId == tableId && filter.UserId == effectiveUserId)
                 .Project(x => x.FilterQuery)
                 .FirstOrDefaultAsync();
 
@@ -178,10 +182,10 @@ namespace FilterComponent.Services
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="query">Üzərində filter edilməsi istənilən query</param>
-        /// <param name="tableId">Filter aparılan table</param>
-        /// <param name="filters">Spesifik filterlər</param>
+        /// <param name="filterDto">Filter DTO</param>
+        /// <param name="userId">Optional userId - background service'ler için kullanılır</param>
         /// <returns></returns>
-        public async Task<IQueryable<T>> ApplyFilter<T>(IQueryable<T> query, FilterDto filterDto)
+        public async Task<IQueryable<T>> ApplyFilter<T>(IQueryable<T> query, FilterDto filterDto, string? userId = null)
         {
             if (filterDto.Filters != null && filterDto.Filters.Any())
             {
@@ -189,7 +193,7 @@ namespace FilterComponent.Services
             }
             else if (filterDto.TableId != null)
             {
-                string? filter = await GetDefaultFilterQuery(filterDto.TableId);
+                string? filter = await GetDefaultFilterQuery(filterDto.TableId, userId);
                 if (filter != null)
                 {
                     query = query.Where(filter);

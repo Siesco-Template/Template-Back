@@ -24,6 +24,5 @@ namespace Folder.Services.FolderServices
         Task AddCommentAsync(string path, string comment);
         Task ChangeIconAsync(string path, string icon);
         Task<FoldersAndFilesDto> SearchInFolderAsync(string path, string keyword);
-        Task<bool> IsFolderExist(string path);
     }
 }

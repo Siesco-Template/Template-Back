@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using ConfigComponent.HelperServices;
+using ConfigComponent.Settings;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using SharedLibrary.HelperServices;
-using SharedLibrary.Settings;
 
 namespace ConfigComponent.Services
 {
@@ -10,6 +10,7 @@ namespace ConfigComponent.Services
         public static void RegisterConfigComponent(this WebApplicationBuilder builder, string MongoDbName)
         {
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddMemoryCache();
             builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection(MongoDbName));
             builder.Services.AddSingleton<MongoDbService>();
             builder.Services.AddScoped<ConfigService>();

@@ -5,6 +5,7 @@
         String = 0,
         Int,
         Decimal,
-        Date
+        Date,
+        Guid
     }
 }

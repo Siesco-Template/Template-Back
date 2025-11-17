@@ -26,7 +26,7 @@ namespace ConfigComponent.Helpers
         {
             var segments = path
                 .Replace("]", "")
-                .Split(new[] { '.', '[' }, StringSplitOptions.RemoveEmptyEntries);
+                .Split(['.', '['], StringSplitOptions.RemoveEmptyEntries);
 
             JToken current = root;
 

@@ -7,5 +7,6 @@
         public const string Sale = "sale";
         public const string Report = "report";
         public const string Department = "department";
+        public const string Organization = "organization";
     }
 }

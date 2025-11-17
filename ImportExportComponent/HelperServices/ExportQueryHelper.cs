@@ -1,7 +1,9 @@
-﻿using ImportExportComponent.Dtos;
+﻿using ImportExportComponent.BackgroundServices;
+using ImportExportComponent.Dtos;
 using ImportExportComponent.Services;
-using TableComponent.Entities;
 using TableComponent.Extensions;
+using System;
+using System.Threading;
 
 namespace ImportExportComponent.HelperServices
 {
@@ -9,10 +11,21 @@ namespace ImportExportComponent.HelperServices
     {
         private readonly ExportService _exportService = exportService;
         private readonly GetQueryHelper _getQueryHelper = getQueryHelper;
-        public async Task ExportData(TableQueryRequest tableRequest, List<ExportColumnDto> columns, string userId)
+        public async Task ExportDataAsync(ExportQueueItem queueItem, CancellationToken cancellationToken = default)
         {
-            var query = await _getQueryHelper.GetQuery(tableRequest, true);
-            await _exportService.ExportAndNotifyAsync(query, columns, userId);
+            if (queueItem.TableRequest is null)
+            {
+                throw new ArgumentException("Table request cannot be null for export operations.", nameof(queueItem));
+            }
+
+            // Background service'te HTTP context olmadığı için userId'yi parametre olarak geçiyoruz
+            var query = await _getQueryHelper.GetQuery(queueItem.TableRequest, true, queueItem.UserId);
+            await _exportService.ExportAndNotifyAsync(
+                query,
+                queueItem.Columns,
+                queueItem.TableRequest.TableId,
+                queueItem.UserId,
+                cancellationToken);
         }
     }
 }

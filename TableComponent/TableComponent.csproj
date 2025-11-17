@@ -4,6 +4,39 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	  
+	<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+	<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+	<AssemblyName>TableComponent</AssemblyName>
+	
+	<!-- NuGet Package Properties -->
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	
+	<PackageId>Template-Back.Table</PackageId>
+	
+	<Title>Template-Back.Table</Title>
+	
+	<Authors>Siesco Studio</Authors>
+	
+	<Company>Siesco</Company>
+	
+	<Version>1.0.0</Version>
+	
+	<Description></Description>
+	
+	<RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	
+	<AssemblyVersion>1.0.0</AssemblyVersion>
+	
+	<FileVersion>1.0.0</FileVersion>
+	
+	<PackAsTool>False</PackAsTool>
+	
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -11,6 +44,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FilterComponent\FilterComponent.csproj" />
+	  <PackageReference Include="Template-Back.Filter" Version="1.0.0" />
 	</ItemGroup>
 </Project>

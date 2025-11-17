@@ -1,9 +1,10 @@
 ﻿using ConfigComponent.Dtos;
+using ConfigComponent.HelperServices;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
-using SharedLibrary.HelperServices;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -14,35 +15,37 @@ namespace ConfigComponent.Services
     {
         private readonly IMongoCollection<BsonDocument> _configsCollection;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly string? _userId;
-        public ConfigService(MongoDbService _mongoDbService, IHttpContextAccessor httpContextAccessor)
+        private readonly IMemoryCache _memoryCache;
+
+        private static readonly FilterDefinition<BsonDocument> DefaultConfigFilter = Builders<BsonDocument>.Filter.Exists("userId", false);
+        private const string DefaultConfigCacheKey = "config:default-document";
+        private static readonly TimeSpan DefaultConfigCacheDuration = TimeSpan.FromMinutes(5);
+
+        private static bool _indexesEnsured;
+        private static readonly object IndexLock = new();
+
+        public ConfigService(
+            MongoDbService mongoDbService,
+            IHttpContextAccessor httpContextAccessor,
+            IMemoryCache memoryCache)
         {
-            var database = _mongoDbService.GetDatabase();
+            var database = mongoDbService.GetDatabase();
             _configsCollection = database.GetCollection<BsonDocument>("Configs");
             _httpContextAccessor = httpContextAccessor;
-            _userId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Sid)?.Value ?? throw new UnauthorizedAccessException("User is not authenticated.");
+            _memoryCache = memoryCache;
+
+            EnsureIndexes();
         }
 
-        public async Task<ConfigResponseDto> GetDefaultAndUserConfigAsync()
+        public async Task<ConfigResponseDto> GetDefaultAndUserConfigAsync(CancellationToken cancellationToken = default)
         {
-            var objectId = new ObjectId("68305836433f0432cba78449");
+            var defaultConfigTask = GetDefaultConfigSnapshotAsync(cancellationToken);
+            var userOverridesTask = GetUserOverridesAsync(cancellationToken);
 
-            var defaultConfigDoc = await _configsCollection
-                .Find(x => x["_id"] == objectId)
-                .FirstOrDefaultAsync();
+            await Task.WhenAll(defaultConfigTask, userOverridesTask).ConfigureAwait(false);
 
-            var userConfigDoc = await _configsCollection
-                .Find(x => x["userId"] == _userId)
-                .FirstOrDefaultAsync();
-
-            var defaultConfig = JObject.Parse(defaultConfigDoc.ToJson());
-
-            JObject userOverrides = [];
-
-            if (userConfigDoc != null && userConfigDoc.TryGetValue("overrides", out var overridesBson))
-            {
-                userOverrides = JObject.Parse(overridesBson.ToJson());
-            }
+            var defaultConfig = defaultConfigTask.Result;
+            var userOverrides = userOverridesTask.Result;
 
             ApplyOrderingToAllTables(defaultConfig["tables"] as JObject, userOverrides);
 
@@ -53,14 +56,27 @@ namespace ConfigComponent.Services
             };
         }
 
-        public async Task CreateOrUpdateUserConfigAsync(Dictionary<string, object?> overrides)
+        public async Task CreateOrUpdateUserConfigAsync(Dictionary<string, object?> overrides, CancellationToken cancellationToken = default)
         {
             if (overrides == null) return;
 
-            var filter = Builders<BsonDocument>.Filter.Eq("userId", _userId);
-            var existing = await _configsCollection.Find(filter).FirstOrDefaultAsync();
+            var userId = GetRequiredUserId();
+            if (overrides.Count == 0)
+            {
+                await EnsureUserDocumentExistsAsync(userId, cancellationToken).ConfigureAwait(false);
+                return;
+            }
 
-            var doc = existing ?? new BsonDocument { ["userId"] = _userId };
+            var filter = Builders<BsonDocument>.Filter.Eq("userId", userId);
+            var projection = Builders<BsonDocument>.Projection.Include("overrides").Exclude("_id");
+
+            var existing = await _configsCollection
+                .Find(filter)
+                .Project<BsonDocument>(projection)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var doc = existing ?? new BsonDocument();
             var ovDoc = (doc.TryGetValue("overrides", out var ovVal) && ovVal.IsBsonDocument)
                 ? ovVal.AsBsonDocument
                 : [];
@@ -78,13 +94,49 @@ namespace ConfigComponent.Services
 
             var update = Builders<BsonDocument>.Update
                 .Set("overrides", ovDoc)
-                .SetOnInsert("userId", _userId);
+                .SetOnInsert("userId", userId);
 
             await _configsCollection.UpdateOneAsync(
                 filter,
                 update,
-                new UpdateOptions { IsUpsert = true }
+                new UpdateOptions { IsUpsert = true },
+                cancellationToken
+            ).ConfigureAwait(false);
+
+            InvalidateUserCache(userId);
+        }
+
+        public async Task DeleteUserTableConfigAsync(string tableKey, CancellationToken cancellationToken = default)
+        {
+            var userId = GetRequiredUserId();
+            if (string.IsNullOrWhiteSpace(tableKey)) return;
+
+            var filter = Builders<BsonDocument>.Filter.Eq("userId", userId);
+            var regex = $"^tables\\.{Regex.Escape(tableKey)}\\.";
+
+            var setStage = new BsonDocument("$set",
+                new BsonDocument("overrides",
+                     new BsonDocument("$arrayToObject",
+                         new BsonDocument("$filter", new BsonDocument
+                         {
+                             { "input", new BsonDocument("$objectToArray", "$overrides") },
+                             { "as", "kv" },
+                             { "cond", new BsonDocument("$not",
+                                 new BsonDocument("$regexMatch", new BsonDocument
+                                 {
+                                     { "input", "$$kv.k" },
+                                     { "regex", regex }
+                                 })
+                             )}
+                         })
+                     )
+                )
             );
+
+            var pipeline = PipelineDefinition<BsonDocument, BsonDocument>.Create([setStage]);
+
+            await _configsCollection.UpdateOneAsync(filter, pipeline, cancellationToken: cancellationToken).ConfigureAwait(false);
+            InvalidateUserCache(userId);
         }
 
         private static BsonValue ToBson(object val)
@@ -113,35 +165,6 @@ namespace ConfigComponent.Services
             foreach (var p in obj.EnumerateObject())
                 d[p.Name] = FromJsonElement(p.Value);
             return d;
-        }
-
-        public async Task DeleteUserTableConfigAsync(string tableKey)
-        {
-            var filter = Builders<BsonDocument>.Filter.Eq("userId", _userId);
-            var regex = $"^tables\\.{Regex.Escape(tableKey)}\\.";
-
-            var setStage = new BsonDocument("$set",
-                new BsonDocument("overrides",
-                     new BsonDocument("$arrayToObject",
-                         new BsonDocument("$filter", new BsonDocument
-                         {
-                             { "input", new BsonDocument("$objectToArray", "$overrides") },
-                             { "as", "kv" },
-                             { "cond", new BsonDocument("$not",
-                                 new BsonDocument("$regexMatch", new BsonDocument
-                                 {
-                                     { "input", "$$kv.k" },
-                                     { "regex", regex }
-                                 })
-                             )}
-                         })
-                     )
-                )
-            );
-
-            var pipeline = PipelineDefinition<BsonDocument, BsonDocument>.Create([setStage]);
-
-            await _configsCollection.UpdateOneAsync(filter, pipeline);
         }
 
         private void ApplyColumnOrdering(JObject? table)
@@ -199,5 +222,124 @@ namespace ConfigComponent.Services
                 ApplyColumnOrderingWithOverrides(table, userOverrides, tableId);
             }
         }
+
+        private async Task<JObject> GetDefaultConfigSnapshotAsync(CancellationToken cancellationToken)
+        {
+            var cached = await _memoryCache.GetOrCreateAsync(
+                DefaultConfigCacheKey,
+                async cacheEntry =>
+                {
+                    cacheEntry.AbsoluteExpirationRelativeToNow = DefaultConfigCacheDuration;
+
+                    var defaultConfigDoc = await _configsCollection
+                        .Find(DefaultConfigFilter)
+                        .FirstOrDefaultAsync(cancellationToken)
+                        .ConfigureAwait(false)
+                        ?? throw new InvalidOperationException("Default configuration document was not found in MongoDB.");
+
+                    return JObject.Parse(defaultConfigDoc.ToJson());
+                }).ConfigureAwait(false);
+
+            return (JObject)cached.DeepClone();
+        }
+
+        private async Task<JObject> GetUserOverridesAsync(CancellationToken cancellationToken)
+        {
+            var userId = TryGetUserId();
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return [];
+            }
+
+            if (_memoryCache.TryGetValue(BuildUserCacheKey(userId), out JObject cachedOverrides) && cachedOverrides is not null)
+            {
+                return (JObject)cachedOverrides.DeepClone();
+            }
+
+            var filter = Builders<BsonDocument>.Filter.Eq("userId", userId);
+            var projection = Builders<BsonDocument>.Projection.Include("overrides").Exclude("_id");
+
+            var userConfigDoc = await _configsCollection
+                .Find(filter)
+                .Project<BsonDocument>(projection)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (userConfigDoc == null || !userConfigDoc.TryGetValue("overrides", out var overridesBson) || !overridesBson.IsBsonDocument)
+            {
+                _memoryCache.Set(BuildUserCacheKey(userId), (JObject)[], DefaultConfigCacheDuration);
+                return [];
+            }
+
+            var overrides = JObject.Parse(overridesBson.ToJson());
+            _memoryCache.Set(BuildUserCacheKey(userId), overrides.DeepClone(), DefaultConfigCacheDuration);
+            return (JObject)overrides.DeepClone();
+        }
+
+        private string GetRequiredUserId()
+        {
+            var userId = TryGetUserId();
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated.");
+            }
+            return userId;
+        }
+
+        private string? TryGetUserId()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            return user?.FindFirstValue(ClaimTypes.Sid)
+                ?? user?.FindFirstValue(ClaimTypes.NameIdentifier);
+        }
+
+        private async Task EnsureUserDocumentExistsAsync(string userId, CancellationToken cancellationToken)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("userId", userId);
+            var update = Builders<BsonDocument>.Update
+                .SetOnInsert("userId", userId)
+                .SetOnInsert("overrides", new BsonDocument());
+
+            await _configsCollection.UpdateOneAsync(
+                filter,
+                update,
+                new UpdateOptions { IsUpsert = true },
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+        private void EnsureIndexes()
+        {
+            if (_indexesEnsured) return;
+
+            lock (IndexLock)
+            {
+                if (_indexesEnsured) return;
+
+                var indexModel = new CreateIndexModel<BsonDocument>(
+                    Builders<BsonDocument>.IndexKeys.Ascending("userId"),
+                    new CreateIndexOptions
+                    {
+                        Name = "ux_configs_userId",
+                        Unique = true,
+                        Sparse = true
+                    });
+
+                try
+                {
+                    _configsCollection.Indexes.CreateOne(indexModel);
+                }
+                catch (MongoCommandException ex) when (ex.CodeName == "IndexOptionsConflict" || ex.CodeName == "IndexKeySpecsConflict")
+                {
+                    // Index already exists with different options.
+                }
+
+                _indexesEnsured = true;
+            }
+        }
+
+        private static string BuildUserCacheKey(string userId) => $"config:user:{userId}";
+
+        private void InvalidateUserCache(string userId) => _memoryCache.Remove(BuildUserCacheKey(userId));
     }
 }

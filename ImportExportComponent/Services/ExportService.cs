@@ -1,153 +1,374 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using ImportExportComponent.Configuration;
 using ImportExportComponent.Dtos;
-using Microsoft.AspNetCore.Http;
+using ImportExportComponent.Hubs;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using QueryGenerator.Extensions;
 using SharedLibrary.Entities;
 using SharedLibrary.HelperServices;
-using System.Linq.Dynamic.Core;
+using System;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Globalization;
 using System.Linq.Expressions;
-using TableComponent.Extensions;
+using System.Threading;
 
 namespace ImportExportComponent.Services
 {
-    public class ExportService(DownloadItemService downloadListService, IHttpContextAccessor httpContextAccessor,
-     GetQueryHelper getQueryHelper, IConfiguration configuration)
+    public class ExportService
     {
-        private readonly DownloadItemService _downloadListService = downloadListService;
-        private readonly GetQueryHelper _getQueryHelper = getQueryHelper;
-        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-        private readonly IConfiguration _configuration = configuration;
-        public async Task ExportAndNotifyAsync(IQueryable<dynamic> query, List<ExportColumnDto> columns, string userId)
+        private readonly DownloadItemService _downloadListService;
+        private readonly IWebHostEnvironment _environment;
+        private readonly ImportExportOptions _options;
+        private readonly IHubContext<ExportHub>? _hubContext;
+        private readonly ILogger<ExportService> _logger;
+        private readonly int _batchSize;
+        private readonly ConcurrentDictionary<(Type ElementType, string PropertyName), Func<object, object?>> _getterCache = new();
+
+        public ExportService(
+            DownloadItemService downloadListService,
+            IWebHostEnvironment environment,
+            ImportExportOptions options,
+            ILogger<ExportService> logger,
+            IHubContext<ExportHub>? hubContext = null)
         {
-            var tableName = "Reports";
-            var fileId = Guid.NewGuid().ToString("N");
-            var fileName = $"{tableName}_{fileId}.xlsx";
+            _downloadListService = downloadListService;
+            _environment = environment;
+            _options = options;
+            _logger = logger;
+            _hubContext = hubContext;
 
-            var exportDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "exports");
-            Directory.CreateDirectory(exportDir);
-
-            var filePath = Path.Combine(exportDir, fileName);
-            await ExportDataAsync(filePath, columns, query);
-
-            var baseUrl = _configuration["BaseUrl"];
-
-            var downloadItem = new DownloadItem
-            {
-                FileName = fileName,
-                FileUrl = $"{baseUrl}/exports/{fileName}",
-                Extension = ".xlsx",
-                CreatedAt = DateTime.UtcNow.AddHours(4),
-                UserId = userId,
-            };
-
-            await _downloadListService.AddItem(downloadItem);
+            _batchSize = Math.Max(1, options.ExportBatchSize);
         }
 
-        public async Task ExportDataAsync(string filePath, List<ExportColumnDto> columns, IQueryable<dynamic> baseQuery)
+        public async Task<DownloadItem> ExportAndNotifyAsync(
+            IQueryable<dynamic> query,
+            IReadOnlyList<ExportColumnDto> columns,
+            string tableId,
+            string userId,
+            CancellationToken cancellationToken = default)
         {
-            var batchSize = 250_000;
-            var getters = new Dictionary<string, Func<object, object?>>();
-            var type = baseQuery.ElementType;
+            ArgumentNullException.ThrowIfNull(query);
+            ArgumentNullException.ThrowIfNull(columns);
+            if (columns.Count == 0) throw new ArgumentException("At least one column must be provided for export.", nameof(columns));
+            if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException("UserId cannot be null or whitespace.", nameof(userId));
 
-            using var doc = SpreadsheetDocument.Create(filePath, SpreadsheetDocumentType.Workbook);
-            var workbookPart = doc.AddWorkbookPart();
+            var safeTableId = string.IsNullOrWhiteSpace(tableId) ? "Export" : tableId;
+            var exportsRoot = EnsureExportDirectory();
+            var fileName = BuildFileName(safeTableId);
+            var filePath = Path.Combine(exportsRoot, fileName);
+
+            _logger.LogInformation("Starting export for table {TableId} into {FilePath}", safeTableId, filePath);
+
+            try
+            {
+                // Notify start
+                await NotifyProgressAsync(userId, "started", 0, cancellationToken);
+
+                // Get total count for progress tracking
+                var totalCount = await query.CountAsync(cancellationToken);
+                await NotifyProgressAsync(userId, "processing", 0, cancellationToken, totalCount);
+
+                await CreateSpreadsheetAsync(filePath, query, columns, userId, totalCount, cancellationToken);
+
+                var downloadItem = await PersistDownloadItemAsync(fileName, userId, cancellationToken);
+                
+                // Notify completion
+                await NotifyClientAsync(userId, downloadItem, cancellationToken);
+                await NotifyProgressAsync(userId, "completed", totalCount, cancellationToken, totalCount);
+
+                _logger.LogInformation("Export completed for table {TableId}. File available at {FileUrl}", safeTableId, downloadItem.FileUrl);
+                return downloadItem;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Export failed for table {TableId} and user {UserId}", safeTableId, userId);
+                await NotifyProgressAsync(userId, "failed", 0, cancellationToken, error: ex.Message);
+                throw;
+            }
+        }
+
+        private async Task CreateSpreadsheetAsync(
+            string filePath,
+            IQueryable<dynamic> baseQuery,
+            IReadOnlyList<ExportColumnDto> columns,
+            string userId,
+            int totalCount,
+            CancellationToken cancellationToken)
+        {
+            // Stream'i ReadWrite modunda aç - SpreadsheetDocument hem okuma hem yazma gerektirir
+            await using var stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read, 64 * 1024, useAsync: true);
+            using var document = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook);
+            var workbookPart = document.AddWorkbookPart();
             workbookPart.Workbook = new Workbook();
             var sheets = workbookPart.Workbook.AppendChild(new Sheets());
 
+            var elementType = baseQuery.ElementType ?? typeof(object);
+            var getters = BuildAccessors(elementType, columns);
+
             int sheetCounter = 1;
+            int skip = 0;
+            int processedCount = 0;
+            var lastNotificationCount = 0;
 
-            foreach (var col in columns)
+            while (true)
             {
-                //her setirdeki datani temsil eden parametr
-                var param = Expression.Parameter(typeof(object), "x");
-                //parametri querydeki tipe cast edir
-                var castedParam = Expression.Convert(param, type);
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                var batch = await baseQuery
+                    .Skip(skip)
+                    .Take(_batchSize)
+                    .ToListAsync(cancellationToken);
 
-                //gelen PropertyName catmaq ucun expression yaradilir
-                var expr = IgnoreCaseHelper.BuildSafePropertyAccessExpression(castedParam, col.PropertyName, out var resultType);
-                if (expr == null)
+                if (batch.Count == 0)
                 {
-                    getters[col.PropertyName] = _ => null;
-                    continue;
+                    break;
                 }
 
-                var lambda = Expression.Lambda<Func<object, object?>>(
-                    Expression.Convert(expr, typeof(object)), param
-                ).Compile();
-
-                // lambda expression getterse elave edilir
-                getters[col.PropertyName] = lambda;
-            }
-
-            for (int i = 0; ; i++)
-            {
-                var batch = await baseQuery.Skip(i * batchSize).Take(batchSize).ToListAsync();
-                if (batch.Count == 0) break;
-
-                var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                var sheetName = $"Sheet_{sheetCounter}";
-
-                sheets.Append(new Sheet
+                try
                 {
-                    Id = workbookPart.GetIdOfPart(worksheetPart),
-                    SheetId = (uint)(sheetCounter - 1),
-                    Name = sheetName
-                });
+                    var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+                    sheets.Append(new Sheet
+                    {
+                        Id = workbookPart.GetIdOfPart(worksheetPart),
+                        SheetId = (uint)sheetCounter,
+                        Name = $"Sheet_{sheetCounter}"
+                    });
 
-                using var writer = OpenXmlWriter.Create(worksheetPart);
-                writer.WriteStartElement(new Worksheet());
-                writer.WriteStartElement(new SheetData());
+                    using var writer = OpenXmlWriter.Create(worksheetPart);
+                    writer.WriteStartElement(new Worksheet());
+                    writer.WriteStartElement(new SheetData());
 
-                WriteHeader(writer, columns);
-                WriteData(writer, batch, columns, getters);
+                    WriteHeader(writer, columns);
+                    WriteData(writer, batch, columns, getters, cancellationToken);
 
-                writer.WriteEndElement(); // SheetData
-                writer.WriteEndElement(); // Worksheet
-                writer.Close();
+                    writer.WriteEndElement(); // SheetData
+                    writer.WriteEndElement(); // Worksheet
+                    writer.Close();
 
-                sheetCounter++;
+                    processedCount += batch.Count;
+                    sheetCounter++;
+                    skip += batch.Count;
+
+                    // Progress notification
+                    if (_options.EnableProgressNotifications && 
+                        processedCount - lastNotificationCount >= _options.ProgressNotificationInterval)
+                    {
+                        await NotifyProgressAsync(userId, "processing", processedCount, cancellationToken, totalCount);
+                        lastNotificationCount = processedCount;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing batch starting at {Skip} for export", skip);
+                    throw;
+                }
             }
 
             workbookPart.Workbook.Save();
         }
 
-        private void WriteHeader(OpenXmlWriter writer, List<ExportColumnDto> columns)
+        private IReadOnlyDictionary<string, Func<object, object?>> BuildAccessors(Type elementType, IReadOnlyList<ExportColumnDto> columns)
+        {
+            var accessors = new Dictionary<string, Func<object, object?>>(columns.Count, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var column in columns)
+            {
+                var key = (elementType, column.PropertyName);
+                var accessor = _getterCache.GetOrAdd(key, cacheKey =>
+                {
+                    var parameter = Expression.Parameter(typeof(object), "instance");
+                    var castedParameter = Expression.Convert(parameter, elementType);
+                    var body = IgnoreCaseHelper.BuildSafePropertyAccessExpression(castedParameter, column.PropertyName, out _);
+
+                    if (body == null)
+                    {
+                        return _ => null;
+                    }
+
+                    var convert = Expression.Convert(body, typeof(object));
+                    return Expression.Lambda<Func<object, object?>>(convert, parameter).Compile();
+                });
+
+                accessors[column.PropertyName] = accessor;
+            }
+
+            return accessors;
+        }
+
+        private static void WriteHeader(OpenXmlWriter writer, IReadOnlyList<ExportColumnDto> columns)
         {
             writer.WriteStartElement(new Row());
-            foreach (var col in columns)
+            foreach (var column in columns)
             {
                 writer.WriteElement(new Cell
                 {
                     DataType = CellValues.String,
-                    CellValue = new CellValue(col.Header ?? col.PropertyName)
+                    CellValue = new CellValue(string.IsNullOrWhiteSpace(column.Header) ? column.PropertyName : column.Header)
                 });
             }
-            writer.WriteEndElement();
+            writer.WriteEndElement(); // Row
         }
 
-        private void WriteData(OpenXmlWriter writer, IEnumerable<dynamic> batch, List<ExportColumnDto> columns, Dictionary<string, Func<object, object?>> getters)
+        private void WriteData(
+            OpenXmlWriter writer,
+            IReadOnlyList<dynamic> batch,
+            IReadOnlyList<ExportColumnDto> columns,
+            IReadOnlyDictionary<string, Func<object, object?>> getters,
+            CancellationToken cancellationToken)
         {
             foreach (var item in batch)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 writer.WriteStartElement(new Row());
-                foreach (var col in columns)
+                foreach (var column in columns)
                 {
-                    var value = getters[col.PropertyName](item);
-                    if (value != null && value.GetType().IsEnum)
-                        value = EnumDisplayHelper.GetEnumDisplayName(value.GetType(), value);
+                    var rawValue = getters[column.PropertyName](item);
+                    var formatted = FormatCellValue(rawValue);
 
                     writer.WriteElement(new Cell
                     {
                         DataType = CellValues.String,
-                        CellValue = new CellValue(value?.ToString())
+                        CellValue = new CellValue(formatted)
                     });
                 }
-                writer.WriteEndElement();
+                writer.WriteEndElement(); // Row
             }
+        }
+
+        private static string? FormatCellValue(object? value)
+        {
+            switch (value)
+            {
+                case null:
+                    return null;
+                case Enum enumValue:
+                    return EnumDisplayHelper.GetEnumDisplayName(enumValue.GetType(), enumValue);
+                case DateTime dateTime:
+                    return dateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                case DateOnly dateOnly:
+                    return dateOnly.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                case TimeOnly timeOnly:
+                    return timeOnly.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+                default:
+                    return Convert.ToString(value, CultureInfo.InvariantCulture);
+            }
+        }
+
+        private async Task<DownloadItem> PersistDownloadItemAsync(string fileName, string userId, CancellationToken cancellationToken)
+        {
+            var downloadUrl = BuildDownloadUrl(fileName);
+            var downloadItem = new DownloadItem
+            {
+                FileName = fileName,
+                FileUrl = downloadUrl,
+                Extension = Path.GetExtension(fileName),
+                CreatedAt = DateTime.UtcNow.AddHours(4),
+                UserId = userId
+            };
+
+            await _downloadListService.AddItem(downloadItem, cancellationToken);
+            return downloadItem;
+        }
+
+        private async Task NotifyClientAsync(string userId, DownloadItem downloadItem, CancellationToken cancellationToken)
+        {
+            if (_hubContext == null)
+            {
+                return;
+            }
+
+            try
+            {
+                await _hubContext.Clients
+                    .User(userId)
+                    .SendAsync("exportCompleted", new
+                    {
+                        downloadItem.FileName,
+                        downloadItem.FileUrl,
+                        downloadItem.CreatedAt
+                    }, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to push export notification via SignalR for user {UserId}.", userId);
+            }
+        }
+
+        private async Task NotifyProgressAsync(
+            string userId,
+            string status,
+            int processedCount,
+            CancellationToken cancellationToken,
+            int? totalCount = null,
+            string? error = null)
+        {
+            if (_hubContext == null || !_options.EnableProgressNotifications)
+            {
+                return;
+            }
+
+            try
+            {
+                var progress = totalCount.HasValue && totalCount.Value > 0
+                    ? (double)processedCount / totalCount.Value * 100
+                    : 0;
+
+                await _hubContext.Clients
+                    .User(userId)
+                    .SendAsync("exportProgress", new
+                    {
+                        Status = status,
+                        ProcessedCount = processedCount,
+                        TotalCount = totalCount,
+                        Progress = Math.Round(progress, 2),
+                        Error = error
+                    }, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to push progress notification via SignalR for user {UserId}.", userId);
+            }
+        }
+
+        private string EnsureExportDirectory()
+        {
+            var webRoot = _environment.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRoot))
+            {
+                webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+            }
+
+            var exportPath = Path.Combine(webRoot, _options.ExportFolderName);
+            Directory.CreateDirectory(exportPath);
+            return exportPath;
+        }
+
+        private string BuildDownloadUrl(string fileName)
+        {
+            var baseUrl = _options.BaseUrl;
+            var relativePath = $"{_options.ExportFolderName}/{fileName}";
+
+            return string.IsNullOrWhiteSpace(baseUrl)
+                ? $"/{relativePath.Replace("\\", "/")}"
+                : $"{baseUrl.TrimEnd('/')}/{relativePath.Replace("\\", "/")}";
+        }
+
+        private static string BuildFileName(string tableId)
+        {
+            var normalized = string.Concat(tableId.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries));
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                normalized = "Export";
+            }
+
+            return $"{normalized}_{DateTime.UtcNow:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}.xlsx";
         }
     }
 }

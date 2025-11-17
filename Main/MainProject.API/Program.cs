@@ -2,7 +2,7 @@
 using FilterComponent.Services;
 using Folder.Services;
 using ImportExportComponent.BackgroundServices;
-using ImportExportComponent.Dtos;
+using ImportExportComponent.Hubs;
 using MainProject.API.Business;
 using MainProject.API.DAL.Contexts;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +12,6 @@ using SharedLibrary.ServiceRegistration;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
-using TableComponent.Entities;
 
 namespace MainProject.API
 {
@@ -32,7 +31,7 @@ namespace MainProject.API
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("MSSQL"));
             });
 
-            builder.Services.AddMainServices();
+            builder.Services.AddMainServices(builder.Configuration);
             builder.Services.AddMainMassTransit(builder.Configuration["RabbitMQ:Username"]!, builder.Configuration["RabbitMQ:Password"]!, builder.Configuration["RabbitMQ:Hostname"]!, builder.Configuration["RabbitMQ:Port"]!);
             builder.Services.AddAuth(builder.Configuration["Jwt:Issuer"]!, builder.Configuration["Jwt:Audience"]!, builder.Configuration["Jwt:SigningKey"]!);
             builder.Services.AddSharedServices(builder.Configuration);
@@ -50,9 +49,12 @@ namespace MainProject.API
             builder.RegisterFolderComponent("MongoDb");
 
             builder.Services.AddSingleton(provider =>
-            {
-                return Channel.CreateUnbounded<(List<ExportColumnDto>, TableQueryRequest, string)>();
-            });
+                Channel.CreateUnbounded<ExportQueueItem>(new UnboundedChannelOptions
+                {
+                    SingleReader = true,
+                    SingleWriter = false,
+                    AllowSynchronousContinuations = false
+                }));
 
             builder.Services.AddHostedService<ExportWorkerService>();
 
@@ -60,11 +62,20 @@ namespace MainProject.API
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowSpecificOrigin",
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-                    });
+                options.AddPolicy("CorsPolicy", builder =>
+                {
+                    builder
+                        .WithOrigins("http://localhost:3000", "http://localhost:5173")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
+            // Configure SignalR with CORS
+            builder.Services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
             });
 
             builder.Services.AddSingleton(new PermissionServiceConfig
@@ -84,15 +95,22 @@ namespace MainProject.API
 
             app.UseSwaggerUI(x => x.ConfigObject.AdditionalItems.Add("persistAuthorization", "true"));
 
-            app.UseHttpsRedirection();
+            // Skip HTTPS redirection in development for HTTP SignalR connections
+            // app.UseHttpsRedirection();
 
-            app.UseCors("AllowSpecificOrigin");
+            // Enable static files serving from wwwroot
+            app.UseStaticFiles();
 
+            app.UseRouting();
+
+            app.UseCors("CorsPolicy");
             app.UseAuthentication();
-
             app.UseAuthorization();
 
             app.MapControllers();
+            
+            // SignalR hub - CORS için authorization'ı hub seviyesinde değil endpoint seviyesinde kontrol ediyoruz
+            app.MapHub<ExportHub>("/hubs/export");
 
             app.Run();
         }

@@ -24,8 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Template-Back.Filter" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\ConfigComponent\ConfigComponent.csproj" />
-    <ProjectReference Include="..\..\FilterComponent\FilterComponent.csproj" />
     <ProjectReference Include="..\..\Folder\Folder.csproj" />
     <ProjectReference Include="..\..\ImportExportComponent\ImportExportComponent.csproj" />
     <ProjectReference Include="..\..\SharedLibrary\SharedLibrary.csproj" />

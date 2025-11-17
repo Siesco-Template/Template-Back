@@ -210,12 +210,5 @@ namespace MainProject.API.Controllers
             await _folderService.MoveFromMultipleSourcesAsync(dto);
             return Ok();
         }
-
-        [HttpGet("[action]")]
-        public async Task<IActionResult> IsFolderExist([FromQuery] string path)
-        {
-            var exists = await _folderService.IsFolderExist(path);
-            return Ok(exists);
-        }
     }
 }

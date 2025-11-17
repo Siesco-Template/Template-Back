@@ -1,4 +1,5 @@
-﻿using ImportExportComponent.Dtos;
+﻿using ImportExportComponent.BackgroundServices;
+using ImportExportComponent.Dtos;
 using ImportExportComponent.HelperServices;
 using ImportExportComponent.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -11,39 +12,43 @@ namespace MainProject.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ExcelController(ImportService importService, Channel<(List<ExportColumnDto>, TableQueryRequest, string)> queue, DownloadItemService downloadItemService, RuleProvider ruleProvider) : ControllerBase
+    public class ExcelController(
+        ImportService importService,
+        Channel<ExportQueueItem> queue,
+        DownloadItemService downloadItemService,
+        RuleProvider ruleProvider) : ControllerBase
     {
         private readonly ImportService _service = importService;
         private readonly RuleProvider _ruleProvider = ruleProvider;
-        private readonly Channel<(List<ExportColumnDto> columns, TableQueryRequest tableRequest, string userId)> _queue = queue;
+        private readonly Channel<ExportQueueItem> _queue = queue;
         private readonly DownloadItemService _downloadItemService = downloadItemService;
 
         //[Permission(PageKeys.Report, ActionKeys.UploadFile)]
         [HttpPost("[action]")]
         public async Task<IActionResult> UploadFile(IFormFile file)
         {
-            var data = await _service.ExtractExcelPreviewAsync(file);
+            var data = await _service.ExtractExcelPreviewAsync(file, HttpContext.RequestAborted);
             return Ok(data);
         }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Validate([FromBody] ValidateRequestDto request)
         {
-            var data = await _service.ValidateRecords(request);
+            var data = await _service.ValidateRecords(request, HttpContext.RequestAborted);
             return Ok(data);
         }
 
         [HttpGet("[action]")]
         public async Task<IActionResult> GetValidationRules(string tableName)
         {
-            var data = await _ruleProvider.GetRulesAsync(tableName);
+            var data = await _ruleProvider.GetRulesAsync(tableName, HttpContext.RequestAborted);
             return Ok(data);
         }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Save(ImportConfirmRequestDto dto)
         {
-            var data = await _service.SaveRecords(dto);
+            var data = await _service.SaveRecords(dto, HttpContext.RequestAborted);
             return Ok(data);
         }
 
@@ -52,7 +57,13 @@ namespace MainProject.API.Controllers
         public async Task<IActionResult> StartExport([FromBody] ExportRequestDto request)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await _queue.Writer.WriteAsync((request.Columns, request.TableRequest, userId));
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized("İstifadəçi məlumatları tapılmadı.");
+            }
+
+            var item = new ExportQueueItem(request.Columns, request.TableRequest, userId);
+            await _queue.Writer.WriteAsync(item, HttpContext.RequestAborted);
             return Ok(new { message = "Export başlatıldı. Zəhmət olmasa tamamlanmasını gözləyin." });
         }
 
@@ -60,7 +71,7 @@ namespace MainProject.API.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> GetItems()
         {
-            var data = await _downloadItemService.GetUserDownloads();
+            var data = await _downloadItemService.GetUserDownloads(HttpContext.RequestAborted);
             return Ok(data);
         }
 

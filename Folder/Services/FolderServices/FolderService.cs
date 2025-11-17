@@ -20,7 +20,7 @@ namespace Folder.Services.FolderServices
             _collection = database.GetCollection<FolderEntity>("Folders");
         }
 
-        public async Task<FolderEntity?> GetFolderByPathAsync(string path)
+        public async Task<FolderEntity> GetFolderByPathAsync(string path)
         {
             path = NormalizePath(path);
 
@@ -28,7 +28,9 @@ namespace Folder.Services.FolderServices
                 return await GetRootFolderAsync();
 
             var rootFolder = await GetRootFolderAsync();
-            return FolderTreeHelper.FindFolderRecursive(rootFolder, path);
+            var folder = FolderTreeHelper.FindFolderRecursive(rootFolder, path);
+
+            return folder ?? throw new NotFoundException($"'{path}' yolunda qovluq tapılmadı.");
         }
 
         public async Task InitializeRootFolder()
@@ -564,19 +566,6 @@ namespace Folder.Services.FolderServices
             {
                 searchRecursive(child, normalizedKeyword, matchingFolders, matchingFiles);
             }
-        }
-
-        public async Task<bool> IsFolderExist(string path)
-        {
-            path = NormalizePath(path);
-
-            var filter = Builders<FolderEntity>.Filter.Or(
-            Builders<FolderEntity>.Filter.Eq(f => f.Path, path),
-            Builders<FolderEntity>.Filter.ElemMatch(f => f.Children,
-            Builders<FolderEntity>.Filter.Eq(c => c.Path, path))
-            );
-            bool exists = await _collection.Find(filter).AnyAsync();
-            return exists;
         }
     }
 }

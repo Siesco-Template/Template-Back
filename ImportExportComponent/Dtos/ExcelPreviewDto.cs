@@ -2,7 +2,7 @@
 {
     public class ExcelPreviewDto
     {
-        public List<string> Headers { get; set; }
-        public List<Dictionary<string, string>> Records { get; set; }
+        public List<string> Headers { get; set; } = [];
+        public List<Dictionary<string, string>> Records { get; set; } = [];
     }
 }

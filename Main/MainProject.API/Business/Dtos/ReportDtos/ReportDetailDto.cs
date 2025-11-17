@@ -15,6 +15,7 @@ namespace MainProject.API.Business.Dtos.ReportDtos
         public string? FuntionalClassificationCode { get; set; }
         public Guid? OrganizationId { get; set; }
         public string? OrganizationName { get; set; }
+        public ReportStatus ReportStatus { get; set; }
         public List<ReportDetailDto> ReportDetails { get; set; }
 
     }

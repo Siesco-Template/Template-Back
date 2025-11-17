@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using SharedLibrary.Entities;
+using System.Threading;
 
 namespace SharedLibrary.HelperServices
 {
@@ -14,17 +15,17 @@ namespace SharedLibrary.HelperServices
             _currentUser = currentUser;
         }
 
-        public async Task AddItem(DownloadItem item)
+        public async Task AddItem(DownloadItem item, CancellationToken cancellationToken = default)
         {
-            await _downloadItems.InsertOneAsync(item);
+            await _downloadItems.InsertOneAsync(item, cancellationToken: cancellationToken);
         }
 
-        public async Task<List<DownloadItem>> GetUserDownloads()
+        public async Task<List<DownloadItem>> GetUserDownloads(CancellationToken cancellationToken = default)
         {
             return await _downloadItems
                 .Find(x => x.UserId == _currentUser.UserId)
                 .SortByDescending(x => x.CreatedAt)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
     }
 }

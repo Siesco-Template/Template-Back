@@ -45,5 +45,35 @@ namespace MainProject.API.Controllers
             await _reportService.BulkDeleteAsync(reportIds);
             return Ok();
         }
+
+        [Permission(PageKeys.Report, ActionKeys.Update)]
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateReport([FromBody] UpdateReportDto updateReportDto)
+        {
+            await _reportService.UpdateReportAsync(updateReportDto);
+            return Ok();
+        }
+
+        [Permission(PageKeys.Report, ActionKeys.Update)]
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateReportStatus([FromBody] UpdateReportStatusDto updateReportStatusDto)
+        {
+            await _reportService.UpdateReportStatusAsync(updateReportStatusDto);
+            return Ok();
+        }
+
+        [Permission(PageKeys.Report, ActionKeys.Update)]
+        [HttpPut("[action]")]
+        public async Task<IActionResult> BulkUpdateReportStatus([FromBody] BulkUpdateReportStatusDto bulkUpdateDto)
+        {
+            await _reportService.BulkUpdateReportStatusAsync(bulkUpdateDto.ReportIds, bulkUpdateDto.ReportStatus);
+            return Ok();
+        }
+    }
+
+    public class BulkUpdateReportStatusDto
+    {
+        public List<Guid> ReportIds { get; set; }
+        public SharedLibrary.Enums.ReportStatus ReportStatus { get; set; }
     }
 }

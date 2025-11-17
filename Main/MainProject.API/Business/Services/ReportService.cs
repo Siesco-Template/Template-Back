@@ -24,7 +24,7 @@ namespace MainProject.API.Business.Services
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 Term = dto.Term,
-                ReportStatus = ReportStatus.Compiled,
+                ReportStatus = dto.ReportStatus ?? ReportStatus.DaxilEdildi,
                 ClassificationCode1 = dto.ClassificationCode1,
                 ClassificationCode2 = dto.ClassificationCode2,
                 FuntionalClassificationCode = dto.FuntionalClassificationCode,
@@ -68,6 +68,7 @@ namespace MainProject.API.Business.Services
                     OrganizationId = x.OrganizationId,
                     OrganizationName = x.Organization.Name,
                     FuntionalClassificationCode = x.FuntionalClassificationCode,
+                    ReportStatus = x.ReportStatus,
                     ReportDetails = x.ReportDetails.Select(y => new ReportDetailDto
                     {
                         ActualAmount = y.ActualAmount,
@@ -107,6 +108,71 @@ namespace MainProject.API.Business.Services
             var fileIds = reports.Select(u => u.Id.ToString()).ToList();
 
             await _folderFileService.BulkDeleteFileAsync(folderPath, fileIds);
+        }
+
+        public async Task UpdateReportAsync(UpdateReportDto dto)
+        {
+            var report = await _context.Reports
+                .Include(x => x.ReportDetails)
+                .FirstOrDefaultAsync(x => x.Id == dto.Id) 
+                ?? throw new NotFoundException("Report mövcud deyil!");
+
+            if (dto.OrganizationId.HasValue && !await _context.Organizations.AnyAsync(x => x.Id == dto.OrganizationId.Value))
+                throw new NotFoundException("Təşkilat mövcud deyil");
+
+            if (dto.Number != null) report.Number = dto.Number;
+            if (dto.CompileDate.HasValue) report.CompileDate = dto.CompileDate.Value;
+            if (dto.StartDate.HasValue) report.StartDate = dto.StartDate.Value;
+            if (dto.EndDate.HasValue) report.EndDate = dto.EndDate.Value;
+            if (dto.Term.HasValue) report.Term = dto.Term.Value;
+            if (dto.ClassificationCode1 != null) report.ClassificationCode1 = dto.ClassificationCode1;
+            if (dto.ClassificationCode2 != null) report.ClassificationCode2 = dto.ClassificationCode2;
+            if (dto.FuntionalClassificationCode != null) report.FuntionalClassificationCode = dto.FuntionalClassificationCode;
+            if (dto.OrganizationId.HasValue) report.OrganizationId = dto.OrganizationId.Value;
+            if (dto.ReportStatus.HasValue) report.ReportStatus = dto.ReportStatus.Value;
+
+            if (dto.ReportDetails != null && dto.ReportDetails.Any())
+            {
+                _context.ReportDetails.RemoveRange(report.ReportDetails);
+                await _context.ReportDetails.AddRangeAsync(dto.ReportDetails.Select(x => new ReportDetail
+                {
+                    ReportId = report.Id,
+                    DetailId = x.DetailId,
+                    EstimateAmount = x.EstimateAmount,
+                    FinancingAmount = x.FinancingAmount,
+                    ActualAmount = x.ActualAmount,
+                    CheckoutAmount = x.CheckoutAmount,
+                }));
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateReportStatusAsync(UpdateReportStatusDto dto)
+        {
+            var report = await _context.Reports.FirstOrDefaultAsync(x => x.Id == dto.ReportId) 
+                ?? throw new NotFoundException("Report mövcud deyil!");
+
+            report.ReportStatus = dto.ReportStatus;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task BulkUpdateReportStatusAsync(List<Guid> reportIds, ReportStatus status)
+        {
+            if (reportIds == null || reportIds.Count == 0)
+                throw new BadRequestException("Report id-ləri göndərilməyib.");
+
+            var reports = await _context.Reports.Where(x => reportIds.Contains(x.Id)).ToListAsync();
+
+            if (reports.Count == 0)
+                throw new NotFoundException("Report tapılmadı.");
+
+            foreach (var report in reports)
+            {
+                report.ReportStatus = status;
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

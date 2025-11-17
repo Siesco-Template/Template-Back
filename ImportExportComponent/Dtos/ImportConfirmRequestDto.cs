@@ -2,7 +2,7 @@
 {
     public class ImportConfirmRequestDto
     {
-        public string TableName { get; set; }
+        public string TableName { get; set; } = string.Empty;
         public List<Dictionary<string, string>> Records { get; set; } = [];
     }
 }
