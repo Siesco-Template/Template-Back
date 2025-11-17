@@ -19,7 +19,7 @@ namespace ImportExportComponent.HelperServices
             }
 
             // Background service'te HTTP context olmadığı için userId'yi parametre olarak geçiyoruz
-            var query = await _getQueryHelper.GetQuery(queueItem.TableRequest, true, queueItem.UserId);
+            var query = await _getQueryHelper.GetQuery(queueItem.TableRequest, true);
             await _exportService.ExportAndNotifyAsync(
                 query,
                 queueItem.Columns,
