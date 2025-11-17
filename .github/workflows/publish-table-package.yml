@@ -1,0 +1,56 @@
+name: Publish TableComponent NuGet Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'TableComponent/**'
+      - 'FilterComponent/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (e.g., 1.0.1)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Configure NuGet sources
+        run: |
+          dotnet nuget add source https://nuget.pkg.github.com/Siesco-Template/index.json \
+            --name github \
+            --username melekhaciahmedova \
+            --password ${{ secrets.GITHUB_TOKEN }} \
+            --store-password-in-clear-text
+
+      - name: Restore dependencies
+        run: dotnet restore TableComponent/TableComponent.csproj
+
+      - name: Build
+        run: dotnet build TableComponent/TableComponent.csproj --configuration Release --no-restore
+
+      - name: Pack
+        run: dotnet pack TableComponent/TableComponent.csproj --configuration Release --no-build --output ./nupkg
+
+      - name: Publish to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source https://nuget.pkg.github.com/Siesco-Template/index.json \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
+
+
