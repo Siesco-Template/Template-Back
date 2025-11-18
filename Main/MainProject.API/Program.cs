@@ -65,7 +65,7 @@ namespace MainProject.API
                 options.AddPolicy("CorsPolicy", builder =>
                 {
                     builder
-                        .AllowAnyOrigin()
+                        .SetIsOriginAllowed(_ => true)
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials();
