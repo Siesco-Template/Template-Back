@@ -4,6 +4,20 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    
+    <PackageId>Siesco-Template.ImportExport</PackageId>
+    <Version>1.0.1</Version>
+    <Authors>Siesco</Authors>
+    <Company>Siesco</Company>
+    <Description>Import and export functionality for Template architecture.</Description>
+    <PackageTags>import;export;template</PackageTags>
+    <RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -15,8 +29,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\SharedLibrary\SharedLibrary.csproj" />
-	  <ProjectReference Include="..\TableComponent\TableComponent.csproj" />
+	  <PackageReference Include="Siesco-Template.SharedLibrary" Version="1.0.0" />
+	  <PackageReference Include="Siesco-Template.Table" Version="1.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>

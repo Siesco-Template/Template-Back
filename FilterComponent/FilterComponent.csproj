@@ -11,6 +11,19 @@
 
 	<AssemblyName>FilterComponent</AssemblyName>
 	
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	
+	<PackageId>Siesco-Template.Filter</PackageId>
+	<Version>1.0.5</Version>
+	<Authors>Siesco</Authors>
+	<Company>Siesco</Company>
+	<Description>.NET library that provides a robust and flexible solution for managing and applying user-defined filters within your applications, specifically designed for MongoDB integration.</Description>
+	<PackageTags>filter;mongodb;template</PackageTags>
+	<RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -22,8 +35,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\QueryGenerator\QueryGenerator.csproj" />
-	  <ProjectReference Include="..\SharedLibrary\SharedLibrary.csproj" />
+	  <PackageReference Include="Siesco-QueryGenerator" Version="1.0.2" />
+	  <PackageReference Include="Siesco-Template.SharedLibrary" Version="1.0.0" />
 	</ItemGroup>
 	
 </Project>

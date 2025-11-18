@@ -4,6 +4,20 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    
+    <PackageId>Siesco-Template.SharedLibrary</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Siesco</Authors>
+    <Company>Siesco</Company>
+    <Description>Shared library for Template architecture.</Description>
+    <PackageTags>shared;template</PackageTags>
+    <RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 	<ItemGroup>

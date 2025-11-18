@@ -11,6 +11,19 @@
 
 	<AssemblyName>TableComponent</AssemblyName>
 	
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	
+	<PackageId>Siesco-Template.Table</PackageId>
+	<Version>1.0.5</Version>
+	<Authors>Siesco</Authors>
+	<Company>Siesco</Company>
+	<Description>Table component for Template architecture.</Description>
+	<PackageTags>table;template</PackageTags>
+	<RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -19,6 +32,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FilterComponent\FilterComponent.csproj" />
+	  <PackageReference Include="Siesco-Template.Filter" Version="1.0.5" />
 	</ItemGroup>
 </Project>
