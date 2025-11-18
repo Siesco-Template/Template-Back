@@ -15,11 +15,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Template-Back.Table" Version="1.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <ProjectReference Include="..\..\SharedLibrary\SharedLibrary.csproj" />
+	  <ProjectReference Include="..\..\TableComponent\TableComponent.csproj" />
 	  <ProjectReference Include="..\Auth.Business\Auth.Business.csproj" />
 	</ItemGroup>
 

@@ -43,5 +43,3 @@ jobs:
             --source https://nuget.pkg.github.com/Siesco-Template/index.json \
             --api-key ${{ secrets.GITHUB_TOKEN }} \
             --skip-duplicate
-
-
