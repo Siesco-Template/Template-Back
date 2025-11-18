@@ -1,59 +1,8 @@
 stages:
-  - publish-packages
   - build
   - deploy
-
 variables:
   DOCKER_HOST: "unix:///var/run/docker.sock"
-  DOTNET_VERSION: "8.0.x"
-
-# NuGet Package Publishing Jobs
-publish-querygenerator:
-  stage: publish-packages
-  tags:
-    - template
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  only:
-    changes:
-      - QueryGenerator/**
-  script:
-    - dotnet restore QueryGenerator/QueryGenerator.csproj
-    - dotnet build QueryGenerator/QueryGenerator.csproj --configuration Release --no-restore
-    - dotnet pack QueryGenerator/QueryGenerator.csproj --configuration Release --no-build --output ./nupkg
-    - dotnet nuget push ./nupkg/*.nupkg --source https://nuget.pkg.github.com/Siesco-Template/index.json --api-key $GITHUB_TOKEN --skip-duplicate || true
-
-publish-filter:
-  stage: publish-packages
-  tags:
-    - template
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  only:
-    changes:
-      - FilterComponent/**
-      - QueryGenerator/**
-  script:
-    - dotnet nuget add source https://nuget.pkg.github.com/Siesco-Template/index.json --name github --username $GITHUB_USERNAME --password $GITHUB_TOKEN --store-password-in-clear-text
-    - dotnet restore FilterComponent/FilterComponent.csproj
-    - dotnet build FilterComponent/FilterComponent.csproj --configuration Release --no-restore
-    - dotnet pack FilterComponent/FilterComponent.csproj --configuration Release --no-build --output ./nupkg
-    - dotnet nuget push ./nupkg/*.nupkg --source https://nuget.pkg.github.com/Siesco-Template/index.json --api-key $GITHUB_TOKEN --skip-duplicate || true
-
-publish-table:
-  stage: publish-packages
-  tags:
-    - template
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  only:
-    changes:
-      - TableComponent/**
-      - FilterComponent/**
-  script:
-    - dotnet nuget add source https://nuget.pkg.github.com/Siesco-Template/index.json --name github --username $GITHUB_USERNAME --password $GITHUB_TOKEN --store-password-in-clear-text
-    - dotnet restore TableComponent/TableComponent.csproj
-    - dotnet build TableComponent/TableComponent.csproj --configuration Release --no-restore
-    - dotnet pack TableComponent/TableComponent.csproj --configuration Release --no-build --output ./nupkg
-    - dotnet nuget push ./nupkg/*.nupkg --source https://nuget.pkg.github.com/Siesco-Template/index.json --api-key $GITHUB_TOKEN --skip-duplicate || true
-
 build-job:
   stage: build
   tags:
@@ -62,7 +11,6 @@ build-job:
   script:
     - echo " Docker image build edilir..."
     - docker compose build    
-
 deploy-job:
   stage: deploy
   tags:
