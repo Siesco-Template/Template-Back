@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - deploy
     paths:
       - 'ImportExportComponent/**'
   workflow_dispatch:
