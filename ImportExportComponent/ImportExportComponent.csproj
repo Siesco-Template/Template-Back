@@ -4,6 +4,26 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	  
+	<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+	<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+	<AssemblyName>ImportExportComponent</AssemblyName>
+	
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	
+	<PackageId>Siesco-Template.ImportExport</PackageId>
+	<Version>1.0.3</Version>
+	<Authors>Siesco</Authors>
+	<Company>Siesco</Company>
+	<Description>Import and export functionality for Template architecture.</Description>
+	<PackageTags>import;export;template</PackageTags>
+	<RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 	<ItemGroup>
