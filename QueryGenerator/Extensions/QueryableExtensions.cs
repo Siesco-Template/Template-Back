@@ -6,7 +6,7 @@ namespace QueryGenerator.Extensions
 {
     public static class QueryableExtensions
     {
-        private static readonly List<int> AllowedPageSizes = [5, 10, 20, 50, 100];
+        private static readonly List<int> AllowedPageSizes = [5, 10, 20, 50, 100, 500];
         public static IQueryable<T> ApplySorting<T>(this IQueryable<T> source, Type entityType, string? sortBy, bool? sortDirection)
         {
             if (string.IsNullOrWhiteSpace(sortBy))
