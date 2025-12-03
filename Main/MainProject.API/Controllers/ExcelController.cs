@@ -45,6 +45,13 @@ namespace MainProject.API.Controllers
             return Ok(data);
         }
 
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetTableColumns(string tableName)
+        {
+            var data = await _service.GetTableColumnsAsync(tableName, HttpContext.RequestAborted);
+            return Ok(data);
+        }
+
         [HttpPost("[action]")]
         public async Task<IActionResult> Save(ImportConfirmRequestDto dto)
         {

@@ -6,6 +6,7 @@ using ImportExportComponent.Validation.Strategies;
 using ImportExportComponent.HelperServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Reflection;
@@ -64,11 +65,10 @@ namespace ImportExportComponent.Services
             // Use improved header detection
             var (headers, headerRowNumber) = _headerDetector.DetectHeader(worksheet, cancellationToken);
 
-            var rows = worksheet.RowsUsed().ToList();
-            var records = new List<Dictionary<string, string>>();
+            var records = new List<Dictionary<string, string>>(_options.MaxPreviewRecords);
             var maxPreviewRecords = _options.MaxPreviewRecords;
 
-            foreach (var row in rows.Where(r => r.RowNumber() > headerRowNumber))
+            foreach (var row in worksheet.RowsUsed().Where(r => r.RowNumber() > headerRowNumber))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -77,7 +77,7 @@ namespace ImportExportComponent.Services
                     break;
                 }
 
-                var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                var record = new Dictionary<string, string>(headers.Count, StringComparer.OrdinalIgnoreCase);
 
                 for (var columnIndex = 0; columnIndex < headers.Count; columnIndex++)
                 {
@@ -87,6 +87,7 @@ namespace ImportExportComponent.Services
                     record[header] = value;
                 }
 
+                // Only add non-empty records
                 if (record.Values.Any(value => !string.IsNullOrWhiteSpace(value)))
                 {
                     records.Add(record);
@@ -109,15 +110,34 @@ namespace ImportExportComponent.Services
             }
 
             var rules = await _ruleProvider.GetRulesAsync(dto.TableName, cancellationToken);
+            if (rules.Count == 0)
+            {
+                // No rules defined, return all records as valid
+                return dto.Records.Select(record => new ValidatedRecordDto
+                {
+                    Records = dto.Mappings
+                        .Where(mapping => record.ContainsKey(mapping.Key))
+                        .ToDictionary(mapping => mapping.Value, mapping => record[mapping.Key], StringComparer.OrdinalIgnoreCase),
+                    IsValid = true,
+                    Errors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
+                }).ToList();
+            }
+
             var validations = new List<ValidatedRecordDto>(dto.Records.Count);
 
             foreach (var record in dto.Records)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var mappedFields = dto.Mappings
-                    .Where(mapping => record.ContainsKey(mapping.Key))
-                    .ToDictionary(mapping => mapping.Value, mapping => record[mapping.Key], StringComparer.OrdinalIgnoreCase);
+                // Pre-allocate dictionary with expected capacity
+                var mappedFields = new Dictionary<string, string>(dto.Mappings.Count, StringComparer.OrdinalIgnoreCase);
+                foreach (var mapping in dto.Mappings)
+                {
+                    if (record.TryGetValue(mapping.Key, out var value))
+                    {
+                        mappedFields[mapping.Value] = value;
+                    }
+                }
 
                 var fieldErrors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
@@ -166,6 +186,159 @@ namespace ImportExportComponent.Services
             }
 
             return validations;
+        }
+
+        /// <summary>
+        /// Gets table columns metadata for a given table name
+        /// </summary>
+        public Task<List<TableColumnDto>> GetTableColumnsAsync(string tableName, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                throw new ArgumentException("TableName dəyəri tələb olunur.", nameof(tableName));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var entityType = _setProvider.GetEntityType(tableName)
+                ?? throw new InvalidOperationException($"Cədvəl tapılmadı: {tableName}");
+
+            var entityMetadata = _dbContext.Model.FindEntityType(entityType);
+            if (entityMetadata == null)
+            {
+                return Task.FromResult(new List<TableColumnDto>());
+            }
+
+            var properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var columns = new List<TableColumnDto>(properties.Length);
+            var primaryKey = entityMetadata.FindPrimaryKey();
+            var primaryKeyPropertyNames = primaryKey?.Properties.Select(p => p.Name).ToHashSet(StringComparer.OrdinalIgnoreCase) 
+                ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var property in properties)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Skip navigation properties and complex types
+                if (IsNavigationOrComplexType(property))
+                {
+                    continue;
+                }
+
+                var propertyMetadata = entityMetadata.FindProperty(property.Name);
+                if (propertyMetadata == null)
+                {
+                    continue;
+                }
+
+                // Skip if property has no setter (read-only)
+                if (property.SetMethod == null)
+                {
+                    continue;
+                }
+
+                var column = new TableColumnDto
+                {
+                    Name = property.Name,
+                    DisplayName = property.Name,
+                    DataType = GetDataTypeName(property.PropertyType),
+                    IsRequired = !propertyMetadata.IsNullable && !IsNullableType(property.PropertyType),
+                    MaxLength = propertyMetadata.GetMaxLength(),
+                    IsPrimaryKey = primaryKeyPropertyNames.Contains(property.Name),
+                    IsAutoGenerated = propertyMetadata.ValueGenerated != ValueGenerated.Never
+                };
+
+                // Check for foreign key relationships
+                var foreignKey = entityMetadata.GetForeignKeys()
+                    .FirstOrDefault(fk => fk.Properties.Any(p => p.Name == property.Name));
+
+                if (foreignKey != null)
+                {
+                    var principalEntity = foreignKey.PrincipalEntityType;
+                    var principalProperty = foreignKey.PrincipalKey.Properties.FirstOrDefault();
+
+                    if (principalEntity != null && principalProperty != null)
+                    {
+                        column.ForeignTable = principalEntity.GetTableName();
+                        column.ForeignColumn = principalProperty.Name;
+                    }
+                }
+
+                columns.Add(column);
+            }
+
+            return Task.FromResult(columns);
+        }
+
+        private static bool IsNavigationOrComplexType(PropertyInfo property)
+        {
+            var type = property.PropertyType;
+            
+            // Fast path: check for common scalar types first
+            if (type == typeof(string) || type == typeof(byte[]) || type.IsPrimitive)
+            {
+                return false;
+            }
+
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+            // Check for common value types
+            if (underlyingType == typeof(Guid) || 
+                underlyingType == typeof(DateTime) || 
+                underlyingType == typeof(DateOnly) ||
+                underlyingType == typeof(TimeOnly) ||
+                underlyingType == typeof(DateTimeOffset) ||
+                underlyingType == typeof(TimeSpan) ||
+                underlyingType == typeof(decimal))
+            {
+                return false;
+            }
+
+            // Check if it's a collection (navigation property)
+            if (type.IsGenericType && typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
+            {
+                return true;
+            }
+
+            // Check if it's a complex type (class but not string, Guid, DateTime, etc.)
+            if (type.IsClass && type != typeof(string) && type != typeof(byte[]) && !type.IsPrimitive)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsNullableType(Type type)
+        {
+            return Nullable.GetUnderlyingType(type) != null;
+        }
+
+        private static string GetDataTypeName(Type propertyType)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+
+            return underlyingType switch
+            {
+                Type t when t == typeof(int) => "int",
+                Type t when t == typeof(long) => "long",
+                Type t when t == typeof(short) => "short",
+                Type t when t == typeof(byte) => "byte",
+                Type t when t == typeof(decimal) => "decimal",
+                Type t when t == typeof(double) => "double",
+                Type t when t == typeof(float) => "float",
+                Type t when t == typeof(bool) => "bool",
+                Type t when t == typeof(DateTime) => "DateTime",
+                Type t when t == typeof(DateOnly) => "DateOnly",
+                Type t when t == typeof(TimeOnly) => "TimeOnly",
+                Type t when t == typeof(DateTimeOffset) => "DateTimeOffset",
+                Type t when t == typeof(TimeSpan) => "TimeSpan",
+                Type t when t == typeof(Guid) => "Guid",
+                Type t when t == typeof(string) => "string",
+                Type t when t == typeof(byte[]) => "byte[]",
+                Type t when t.IsEnum => "enum",
+                _ => underlyingType.Name
+            };
         }
 
         public async Task<ImportResult> SaveRecords(ImportConfirmRequestDto dto, CancellationToken cancellationToken = default)
@@ -217,16 +390,18 @@ namespace ImportExportComponent.Services
         {
             var importedCount = 0;
             var retryAttempts = _options.MaxRetryAttempts;
+            var totalRecords = records.Count;
 
-            for (int i = 0; i < records.Count; i += batchSize)
+            for (int i = 0; i < totalRecords; i += batchSize)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var batch = records.Skip(i).Take(batchSize).ToList();
-                var entities = new List<object>();
+                var batchEnd = Math.Min(i + batchSize, totalRecords);
+                var entities = new List<object>(batchEnd - i);
 
-                foreach (var record in batch)
+                for (int j = i; j < batchEnd; j++)
                 {
+                    var record = records[j];
                     try
                     {
                         var entity = MapToEntity(record, entityType);
@@ -234,7 +409,7 @@ namespace ImportExportComponent.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Record mapping failed at index {Index}", i + batch.IndexOf(record));
+                        _logger.LogWarning(ex, "Record mapping failed at index {Index}", j);
                         // Continue with other records
                     }
                 }
@@ -271,11 +446,20 @@ namespace ImportExportComponent.Services
 
             foreach (var property in entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (property.SetMethod is null || (property.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase) && !mappedFields.ContainsKey(property.Name)))
+                // Skip read-only properties
+                if (property.SetMethod == null)
                 {
                     continue;
                 }
 
+                // Skip Id properties that are not in mapped fields (auto-generated)
+                if (property.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase) && 
+                    !mappedFields.ContainsKey(property.Name))
+                {
+                    continue;
+                }
+
+                // Try to get value from mapped fields
                 if (!mappedFields.TryGetValue(property.Name, out var value) || string.IsNullOrWhiteSpace(value))
                 {
                     continue;

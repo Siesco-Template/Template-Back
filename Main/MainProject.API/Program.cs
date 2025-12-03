@@ -1,4 +1,5 @@
 ﻿using ConfigComponent.Services;
+using FilterComponent.HelperServices;
 using FilterComponent.Services;
 using Folder.Services;
 using ImportExportComponent.BackgroundServices;
@@ -44,6 +45,7 @@ namespace MainProject.API
             });
 
             builder.RegisterFilterComponent("MongoDb");
+            builder.Services.AddScoped<FilterComponent.HelperServices.CurrentUser>();
             builder.RegisterConfigComponent("MongoDb");
             builder.RegisterDownloadItems("MongoDb");
             builder.RegisterFolderComponent("MongoDb");
