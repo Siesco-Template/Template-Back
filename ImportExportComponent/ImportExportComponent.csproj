@@ -17,7 +17,7 @@
 	<Version>1.0.4</Version>
 	<Authors>Siesco</Authors>
 	<Company>Siesco</Company>
-	<Description>Import and export functionality for Template architecture.</Description>
+	<Description>Import and export functionality for Template architecture. Version 1.0.4 - Removed SharedLibrary dependency.</Description>
 	<PackageTags>import;export;template</PackageTags>
 	<RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
 	<RepositoryType>git</RepositoryType>
