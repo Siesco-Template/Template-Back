@@ -4,11 +4,11 @@ using FilterComponent.Services;
 using Folder.Services;
 using ImportExportComponent.BackgroundServices;
 using ImportExportComponent.Hubs;
+using ImportExportComponent.Services;
 using MainProject.API.Business;
 using MainProject.API.DAL.Contexts;
 using Microsoft.EntityFrameworkCore;
 using SharedLibrary;
-using SharedLibrary.HelperServices;
 using SharedLibrary.ServiceRegistration;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -47,7 +47,7 @@ namespace MainProject.API
             builder.RegisterFilterComponent("MongoDb");
             builder.Services.AddScoped<FilterComponent.HelperServices.CurrentUser>();
             builder.RegisterConfigComponent("MongoDb");
-            builder.RegisterDownloadItems("MongoDb");
+            builder.RegisterImportExportComponent("MongoDb");
             builder.RegisterFolderComponent("MongoDb");
 
             builder.Services.AddSingleton(provider =>
