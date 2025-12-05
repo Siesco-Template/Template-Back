@@ -3,7 +3,6 @@ using FilterComponent.HelperServices;
 using FilterComponent.Services;
 using Folder.Services;
 using ImportExportComponent.BackgroundServices;
-using ImportExportComponent.Hubs;
 using ImportExportComponent.Services;
 using MainProject.API.Business;
 using MainProject.API.DAL.Contexts;
@@ -74,12 +73,6 @@ namespace MainProject.API
                 });
             });
 
-            // Configure SignalR with CORS
-            builder.Services.AddSignalR(options =>
-            {
-                options.EnableDetailedErrors = true;
-            });
-
             builder.Services.AddSingleton(new PermissionServiceConfig
             {
 #if DEBUG
@@ -110,9 +103,6 @@ namespace MainProject.API
             app.UseAuthorization();
 
             app.MapControllers();
-            
-            // SignalR hub - CORS için authorization'ı hub seviyesinde değil endpoint seviyesinde kontrol ediyoruz
-            app.MapHub<ExportHub>("/hubs/export");
 
             app.Run();
         }

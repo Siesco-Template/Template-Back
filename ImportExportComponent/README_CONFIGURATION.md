@@ -84,8 +84,8 @@ Varsayılan olarak: `{AppContext.BaseDirectory}/Resources/rules.json`
     "EnableAutoRuleGeneration": true,        // Otomatik rule generation (varsayılan: true)
     "MaxRetryAttempts": 3,                  // Hata durumunda retry sayısı
     "RetryDelayMs": 1000,                   // Retry arası bekleme süresi (ms)
-    "EnableProgressNotifications": true,     // SignalR progress bildirimleri
-    "ProgressNotificationInterval": 1000,    // Progress bildirim aralığı (kayıt sayısı)
+    "EnableProgressNotifications": false,    // Progress bildirimleri (deprecated - geriye uyumluluk için tutulmuştur)
+    "ProgressNotificationInterval": 1000,    // Progress bildirim aralığı (deprecated - geriye uyumluluk için tutulmuştur)
     "MaxPreviewRecords": 100,               // Excel preview için max kayıt sayısı
     "EnableTransactionManagement": true,     // Import için transaction yönetimi
     "HeaderDetectionSensitivity": 0.7,      // Excel header tespiti hassasiyeti (0.0-1.0)

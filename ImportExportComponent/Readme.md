@@ -38,10 +38,6 @@ Bu modul aşağıdakı əsas məqsədləri yerinə yetirir:
   `rules.json` faylını oxuyur, hər cədvəl üçün sahə qaydalarını (`FieldValidationRule`) qaytarır,  
   həmçinin xarici dəyərlərin (`ForeignTable`, `ForeignColumn`) bazada olub-olmamasını yoxlayır.
 
-### 📡 `Hubs`
-- **ExportHub.cs**  
-  SignalR vasitəsilə real vaxtda istifadəçiyə məlumat göndərmək üçün istifadə olunur.
-
 ### 🧮 `Services`
 - **ImportService.cs**  
   - `ExtractExcelPreviewAsync` → Excel faylının başlıqlarını və sətirlərini tanıyır  
@@ -115,7 +111,6 @@ DownloadList-ə link əlavə olunur → İstifadəçiyə bildiriş
 | **ClosedXML** | Excel fayllarının oxunması |
 | **OpenXML SDK** | Böyük Excel fayllarının yaddaş dostu yazılması |
 | **Entity Framework Core** | DB əməliyyatları və LINQ sorğuları |
-| **SignalR (Hub)** | Real-time bildirişlər |
 | **BackgroundService + Channel** | Asinxron export növbəsi |
 | **JsonSerializer / Newtonsoft.Json** | Qaydaların və dataların işlənməsi |
 | **LINQ Expressions** | Dinamik validasiya və sorğu icrası |

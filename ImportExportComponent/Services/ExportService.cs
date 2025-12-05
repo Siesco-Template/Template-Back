@@ -3,9 +3,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ImportExportComponent.Configuration;
 using ImportExportComponent.Dtos;
-using ImportExportComponent.Hubs;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using QueryGenerator.Extensions;
@@ -25,7 +23,6 @@ namespace ImportExportComponent.Services
         private readonly DownloadItemService _downloadListService;
         private readonly IWebHostEnvironment _environment;
         private readonly ImportExportOptions _options;
-        private readonly IHubContext<ExportHub>? _hubContext;
         private readonly ILogger<ExportService> _logger;
         private readonly int _batchSize;
         private readonly ConcurrentDictionary<(Type ElementType, string PropertyName), Func<object, object?>> _getterCache = new();
@@ -34,14 +31,12 @@ namespace ImportExportComponent.Services
             DownloadItemService downloadListService,
             IWebHostEnvironment environment,
             ImportExportOptions options,
-            ILogger<ExportService> logger,
-            IHubContext<ExportHub>? hubContext = null)
+            ILogger<ExportService> logger)
         {
             _downloadListService = downloadListService;
             _environment = environment;
             _options = options;
             _logger = logger;
-            _hubContext = hubContext;
 
             _batchSize = Math.Max(1, options.ExportBatchSize);
         }
@@ -51,6 +46,7 @@ namespace ImportExportComponent.Services
             IReadOnlyList<ExportColumnDto> columns,
             string tableId,
             string userId,
+            string? downloadItemId = null,
             CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(query);
@@ -67,20 +63,12 @@ namespace ImportExportComponent.Services
 
             try
             {
-                // Notify start
-                await NotifyProgressAsync(userId, "started", 0, cancellationToken);
-
                 // Get total count for progress tracking
                 var totalCount = await query.CountAsync(cancellationToken);
-                await NotifyProgressAsync(userId, "processing", 0, cancellationToken, totalCount);
 
                 await CreateSpreadsheetAsync(filePath, query, columns, userId, totalCount, cancellationToken);
 
-                var downloadItem = await PersistDownloadItemAsync(fileName, userId, cancellationToken);
-                
-                // Notify completion
-                await NotifyClientAsync(userId, downloadItem, cancellationToken);
-                await NotifyProgressAsync(userId, "completed", totalCount, cancellationToken, totalCount);
+                var downloadItem = await PersistDownloadItemAsync(fileName, userId, downloadItemId, cancellationToken);
 
                 _logger.LogInformation("Export completed for table {TableId}. File available at {FileUrl}", safeTableId, downloadItem.FileUrl);
                 return downloadItem;
@@ -88,7 +76,6 @@ namespace ImportExportComponent.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Export failed for table {TableId} and user {UserId}", safeTableId, userId);
-                await NotifyProgressAsync(userId, "failed", 0, cancellationToken, error: ex.Message);
                 throw;
             }
         }
@@ -114,7 +101,6 @@ namespace ImportExportComponent.Services
             int sheetCounter = 1;
             int skip = 0;
             int processedCount = 0;
-            var lastNotificationCount = 0;
 
             while (true)
             {
@@ -154,14 +140,6 @@ namespace ImportExportComponent.Services
                     processedCount += batch.Count;
                     sheetCounter++;
                     skip += batch.Count;
-
-                    // Progress notification
-                    if (_options.EnableProgressNotifications && 
-                        processedCount - lastNotificationCount >= _options.ProgressNotificationInterval)
-                    {
-                        await NotifyProgressAsync(userId, "processing", processedCount, cancellationToken, totalCount);
-                        lastNotificationCount = processedCount;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -261,80 +239,36 @@ namespace ImportExportComponent.Services
             }
         }
 
-        private async Task<DownloadItem> PersistDownloadItemAsync(string fileName, string userId, CancellationToken cancellationToken)
+        private async Task<DownloadItem> PersistDownloadItemAsync(string fileName, string userId, string? downloadItemId = null, CancellationToken cancellationToken = default)
         {
             var downloadUrl = BuildDownloadUrl(fileName);
+
+            if (!string.IsNullOrWhiteSpace(downloadItemId))
+            {
+                // Update existing DownloadItem
+                await _downloadListService.UpdateFileInfoAsync(downloadItemId, fileName, downloadUrl, cancellationToken);
+                
+                // Get updated item
+                var updatedItem = await _downloadListService.GetByIdAsync(downloadItemId, cancellationToken);
+                if (updatedItem != null)
+                {
+                    return updatedItem;
+                }
+            }
+
+            // Create new DownloadItem
             var downloadItem = new DownloadItem
             {
                 FileName = fileName,
                 FileUrl = downloadUrl,
                 Extension = Path.GetExtension(fileName),
                 CreatedAt = DateTime.UtcNow.AddHours(4),
-                UserId = userId
+                UserId = userId,
+                Status = "completed"
             };
 
             await _downloadListService.AddItem(downloadItem, cancellationToken);
             return downloadItem;
-        }
-
-        private async Task NotifyClientAsync(string userId, DownloadItem downloadItem, CancellationToken cancellationToken)
-        {
-            if (_hubContext == null)
-            {
-                return;
-            }
-
-            try
-            {
-                await _hubContext.Clients
-                    .User(userId)
-                    .SendAsync("exportCompleted", new
-                    {
-                        downloadItem.FileName,
-                        downloadItem.FileUrl,
-                        downloadItem.CreatedAt
-                    }, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to push export notification via SignalR for user {UserId}.", userId);
-            }
-        }
-
-        private async Task NotifyProgressAsync(
-            string userId,
-            string status,
-            int processedCount,
-            CancellationToken cancellationToken,
-            int? totalCount = null,
-            string? error = null)
-        {
-            if (_hubContext == null || !_options.EnableProgressNotifications)
-            {
-                return;
-            }
-
-            try
-            {
-                var progress = totalCount.HasValue && totalCount.Value > 0
-                    ? (double)processedCount / totalCount.Value * 100
-                    : 0;
-
-                await _hubContext.Clients
-                    .User(userId)
-                    .SendAsync("exportProgress", new
-                    {
-                        Status = status,
-                        ProcessedCount = processedCount,
-                        TotalCount = totalCount,
-                        Progress = Math.Round(progress, 2),
-                        Error = error
-                    }, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to push progress notification via SignalR for user {UserId}.", userId);
-            }
         }
 
         private string EnsureExportDirectory()

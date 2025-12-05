@@ -48,19 +48,19 @@ namespace ImportExportComponent.Configuration
         public int RetryDelayMs { get; set; } = 1_000;
 
         /// <summary>
-        /// Enable progress notifications via SignalR
+        /// Enable progress notifications (deprecated - kept for backward compatibility)
         /// </summary>
-        public bool EnableProgressNotifications { get; set; } = true;
+        public bool EnableProgressNotifications { get; set; } = false;
 
         /// <summary>
-        /// Progress notification interval (number of records processed before notification)
+        /// Progress notification interval (number of records processed before notification) (deprecated - kept for backward compatibility)
         /// </summary>
         public int ProgressNotificationInterval { get; set; } = 1_000;
 
         /// <summary>
         /// Maximum number of preview records to return
         /// </summary>
-        public int MaxPreviewRecords { get; set; } = 100;
+        public int MaxPreviewRecords { get; set; } = 500;
 
         /// <summary>
         /// Enable transaction management for imports
