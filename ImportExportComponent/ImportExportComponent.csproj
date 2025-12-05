@@ -14,10 +14,10 @@
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	
 	<PackageId>Siesco-Template.ImportExport</PackageId>
-	<Version>1.0.14</Version>
+	<Version>1.0.15</Version>
 	<Authors>Siesco</Authors>
 	<Company>Siesco</Company>
-	<Description>Import and export functionality for Template architecture. Version 1.0.14 - Removed SignalR integration from Export functionality and simplified export endpoints (only StartExport and GetItems remain).</Description>
+	<Description>Import and export functionality for Template architecture. Version 1.0.15 - Removed SignalR integration from Export functionality and simplified export endpoints (only StartExport and GetItems remain).</Description>
 	<PackageTags>import;export;template</PackageTags>
 	<RepositoryUrl>https://github.com/Siesco-Template/Template-Back.git</RepositoryUrl>
 	<RepositoryType>git</RepositoryType>
